@@ -1,13 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mini-react</title>
+    <title>Mini React · Phase 1</title>
   </head>
   <body>
-    <div id="app"></div>
+    <main id="app">
+      <h1>Mini React · Phase 1</h1>
+      <p>Virtual DOM → Diff → Patch → History</p>
+      <p role="status">
+        프로젝트 뼈대입니다. 핵심 모듈 구현 후 버튼을 연결하세요.
+      </p>
+      <nav aria-label="변경 및 이력 제어">
+        <button id="patch-button" type="button" disabled>Patch</button>
+        <button id="undo-button" type="button" disabled>뒤로가기</button>
+        <button id="redo-button" type="button" disabled>앞으로가기</button>
+      </nav>
+      <div class="panels">
+        <section aria-labelledby="actual-title">
+          <h2 id="actual-title">실제 영역</h2>
+          <div id="actual-root" class="sample-area"></div>
+        </section>
+        <section aria-labelledby="test-title">
+          <h2 id="test-title">테스트 영역</h2>
+          <p id="editor-help">아래 텍스트를 직접 수정할 수 있습니다.</p>
+          <div
+            id="test-root"
+            class="sample-area"
+            contenteditable="true"
+            aria-label="테스트 편집 영역"
+            aria-describedby="editor-help"
+          ></div>
+        </section>
+      </div>
+      <section aria-labelledby="patch-title">
+        <h2 id="patch-title">변경 목록</h2>
+        <pre id="patch-output">Diff 구현 후 변경 목록이 표시됩니다.</pre>
+      </section>
+    </main>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
