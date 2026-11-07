@@ -8,5 +8,29 @@
  * canUndo: () => boolean, canRedo: () => boolean}}
  */
 export function createHistory(initial) {
-  throw new Error('TODO: createHistory 구현');
+  const snapshots = [structuredClone(initial)];
+  let cursor = 0;
+  const current = () => structuredClone(snapshots[cursor]);
+  const canUndo = () => cursor > 0;
+  const canRedo = () => cursor < snapshots.length - 1;
+
+  return {
+    current,
+    canUndo,
+    canRedo,
+    push(next) {
+      const snapshot = structuredClone(next);
+      snapshots.splice(cursor + 1);
+      snapshots.push(snapshot);
+      cursor += 1;
+    },
+    undo() {
+      if (canUndo()) cursor -= 1;
+      return current();
+    },
+    redo() {
+      if (canRedo()) cursor += 1;
+      return current();
+    },
+  };
 }

@@ -3,41 +3,838 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mini React · Phase 1</title>
+    <title>Mini React · Phase 1 &amp; 2</title>
   </head>
   <body>
     <main id="app">
-      <h1>Mini React · Phase 1</h1>
-      <p>Virtual DOM → Diff → Patch → History</p>
-      <p role="status">
-        프로젝트 뼈대입니다. 핵심 모듈 구현 후 버튼을 연결하세요.
-      </p>
-      <nav aria-label="변경 및 이력 제어">
-        <button id="patch-button" type="button" disabled>Patch</button>
-        <button id="undo-button" type="button" disabled>뒤로가기</button>
-        <button id="redo-button" type="button" disabled>앞으로가기</button>
+      <header class="page-header">
+        <p class="project-label">JUNGLE MINI PROJECT / PHASE 1 + 2</p>
+        <h1>Mini React<span aria-hidden="true">.</span></h1>
+        <p class="intro">직접 바꾸고, 차이를 확인하세요.</p>
+        <p class="pipeline">Virtual DOM → Diff → Patch → History</p>
+      </header>
+      <nav
+        class="view-tabs"
+        role="tablist"
+        aria-label="Mini React 학습 화면 선택"
+      >
+        <button
+          id="practice-tab"
+          data-phase="1"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="practice-panel"
+        >
+          기본 <span class="tab-practice">실습</span> · Phase 1
+        </button>
+        <button
+          id="comparison-tab"
+          data-phase="1"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="comparison-panel"
+          tabindex="-1"
+        >
+          비교 <span class="tab-experiment">실험</span> · Phase 1
+        </button>
+        <button
+          id="state-tab"
+          data-phase="2"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="state-panel"
+          tabindex="-1"
+        >
+          상태 <span class="tab-practice">실습</span> · Phase 2
+        </button>
+        <button
+          id="state-comparison-tab"
+          data-phase="2"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="state-comparison-panel"
+          tabindex="-1"
+        >
+          비교 <span class="tab-experiment">실험</span> · Phase 2
+        </button>
       </nav>
-      <div class="panels">
-        <section aria-labelledby="actual-title">
-          <h2 id="actual-title">실제 영역</h2>
-          <div id="actual-root" class="sample-area"></div>
-        </section>
-        <section aria-labelledby="test-title">
-          <h2 id="test-title">테스트 영역</h2>
-          <p id="editor-help">아래 텍스트를 직접 수정할 수 있습니다.</p>
-          <div
-            id="test-root"
-            class="sample-area"
-            contenteditable="true"
-            aria-label="테스트 편집 영역"
-            aria-describedby="editor-help"
-          ></div>
-        </section>
-      </div>
-      <section aria-labelledby="patch-title">
-        <h2 id="patch-title">변경 목록</h2>
-        <pre id="patch-output">Diff 구현 후 변경 목록이 표시됩니다.</pre>
+      <section
+        id="practice-panel"
+        role="tabpanel"
+        aria-labelledby="practice-tab"
+      >
+        <p role="status" class="status">화면을 준비하고 있습니다.</p>
+        <nav aria-label="변경 및 이력 제어">
+          <button id="patch-button" type="button" disabled>Patch</button>
+          <button id="undo-button" type="button" disabled>뒤로가기</button>
+          <button id="redo-button" type="button" disabled>앞으로가기</button>
+        </nav>
+        <div class="panels">
+          <section aria-labelledby="actual-title">
+            <h2 id="actual-title">실제 영역</h2>
+            <p>Patch 버튼으로 변경 사항이 반영되는 영역입니다.</p>
+            <div id="actual-root" class="sample-area"></div>
+          </section>
+          <section aria-labelledby="test-title">
+            <h2 id="test-title">테스트 영역</h2>
+            <p id="editor-help">아래 텍스트를 직접 수정할 수 있습니다.</p>
+            <div
+              id="test-root"
+              class="sample-area"
+              contenteditable="true"
+              aria-label="테스트 편집 영역"
+              aria-describedby="editor-help"
+            ></div>
+          </section>
+        </div>
+        <details class="editor-section" open>
+          <summary id="html-title">HTML 편집</summary>
+          <p id="html-help">
+            일반 HTML 태그와 class·id·title·data-*·aria-* 속성을 지원합니다.
+            전체를 감싸는 요소 하나를 유지해 주세요. 스크립트·이벤트 속성 등은
+            지원하지 않습니다.
+          </p>
+          <label for="html-editor">테스트 영역의 HTML</label>
+          <textarea
+            id="html-editor"
+            rows="10"
+            spellcheck="false"
+            aria-describedby="html-help"
+          ></textarea>
+          <button id="apply-html-button" type="button">미리보기 적용</button>
+        </details>
+        <details class="changes-section" open>
+          <summary id="patch-title">변경 목록</summary>
+          <pre id="patch-output" aria-label="마지막 작업의 변경 목록">[]</pre>
+        </details>
       </section>
+      <section
+        id="comparison-panel"
+        role="tabpanel"
+        aria-labelledby="comparison-tab"
+        hidden
+      >
+        <h2>추가·삭제·태그 변경, 필요한 요소만 바꿀 수 있을까요?</h2>
+        <p>
+          같은 변경을 두 방식으로 적용합니다. p·strong·div 같은 태그는 DOM
+          요소입니다. 한 문장 항목(li) 안에도 여러 요소가 들어갈 수 있습니다.
+          항목의 재사용과 실제 요소의 생성·제거를 나누어 비교하세요.
+        </p>
+        <div class="comparison-controls">
+          <label for="compare-size"
+            >문장 수 · 변경하면 처음 상태로 시작
+            <select id="compare-size">
+              <option value="100">100개</option>
+              <option value="1000">1,000개</option>
+            </select>
+          </label>
+          <label for="compare-operation"
+            >비교할 작업
+            <select id="compare-operation">
+              <option value="text">기존 요소의 글자 수정</option>
+              <option value="append">끝에 항목 추가</option>
+              <option value="remove">끝 항목 삭제</option>
+              <option value="tag">항목 안의 태그 변경</option>
+            </select>
+          </label>
+          <label for="compare-tag"
+            >바꿀 태그 · 태그 변경에서 사용
+            <select id="compare-tag" disabled>
+              <option value="strong">strong · 굵게</option>
+              <option value="p">p · 문단</option>
+              <option value="div">div · 묶음</option>
+            </select>
+          </label>
+          <label for="compare-index"
+            ><span id="compare-index-label">바꿀 문장 번호 (1~100)</span>
+            <input
+              id="compare-index"
+              type="number"
+              min="1"
+              max="100"
+              step="1"
+              value="50"
+            />
+          </label>
+          <label for="compare-text"
+            >새 내용 · 삭제에서는 사용하지 않음
+            <input
+              id="compare-text"
+              type="text"
+              value="수정한 문장 50"
+              maxlength="200"
+            />
+          </label>
+          <button id="compare-run" type="button">
+            같은 변경으로 비교 실행
+          </button>
+          <button id="compare-reset" type="button">처음 상태로</button>
+        </div>
+        <p id="comparison-status" role="status" class="status"></p>
+        <p class="comparison-experience">
+          직접 체험: 양쪽 목록의 첫 문장에 메모칸이 있습니다. 체험용으로 ‘작성
+          중인 메모’를 미리 넣었습니다. 내용을 바꿔도 됩니다. 비교 실행 후 왼쪽
+          메모는 새 입력칸으로 교체되어 사라지고, 오른쪽 메모는 기존 입력칸에
+          남는지 확인하세요.
+        </p>
+        <p id="comparison-map-unit" class="comparison-note"></p>
+        <p class="comparison-legend">
+          <span class="legend-created">■ 항목 생성·내부 요소 교체</span> ·
+          <span class="legend-removed">▧ 항목 삭제</span> ·
+          <span class="legend-text">■ 기존 요소의 글자만 수정</span> · □ 그대로
+          재사용
+        </p>
+        <div class="panels comparison-results">
+          <section aria-labelledby="full-title">
+            <h3 id="full-title">목록 전체 DOM 교체</h3>
+            <p>새 목록을 만들어 기존 목록과 교체합니다.</p>
+            <div class="comparison-work">
+              <strong id="full-work">아직 실행하지 않았습니다.</strong>
+              <span id="full-map-unit" class="comparison-unit"></span>
+              <div
+                id="full-map"
+                class="comparison-map"
+                role="img"
+                aria-label="전체 교체의 문장별 작업 지도"
+              ></div>
+            </div>
+            <div
+              id="full-result"
+              class="sample-area comparison-list"
+              aria-label="전체 교체 결과"
+            ></div>
+          </section>
+          <section aria-labelledby="partial-title">
+            <h3 id="partial-title">Mini React · Diff·Patch</h3>
+            <p>전체 VDOM을 비교한 뒤 변경 명령만 적용합니다.</p>
+            <div class="comparison-work">
+              <strong id="partial-work">아직 실행하지 않았습니다.</strong>
+              <span id="partial-map-unit" class="comparison-unit"></span>
+              <div
+                id="partial-map"
+                class="comparison-map"
+                role="img"
+                aria-label="Diff·Patch의 문장별 작업 지도"
+              ></div>
+            </div>
+            <div
+              id="partial-result"
+              class="sample-area comparison-list"
+              aria-label="Diff·Patch 결과"
+            ></div>
+          </section>
+        </div>
+        <table class="comparison-table">
+          <caption>
+            마지막 실행의 작업량 · 항목(li)과 전체 요소(ul·li·input·strong 등)를
+            구분합니다.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">확인 항목</th>
+              <th scope="col">전체 교체</th>
+              <th scope="col">Diff·Patch</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">재사용한 문장 항목(li)</th>
+              <td id="full-kept">—</td>
+              <td id="partial-kept">—</td>
+            </tr>
+            <tr>
+              <th scope="row">새로 만든 문장 항목(li)</th>
+              <td id="full-created">—</td>
+              <td id="partial-created">—</td>
+            </tr>
+            <tr>
+              <th scope="row">제거한 문장 항목(li)</th>
+              <td id="full-removed">—</td>
+              <td id="partial-removed">—</td>
+            </tr>
+            <tr>
+              <th scope="row">새로 만든 전체 요소</th>
+              <td id="full-elements-created">—</td>
+              <td id="partial-elements-created">—</td>
+            </tr>
+            <tr>
+              <th scope="row">제거한 전체 요소</th>
+              <td id="full-elements-removed">—</td>
+              <td id="partial-elements-removed">—</td>
+            </tr>
+            <tr>
+              <th scope="row">이번 실행의 처리 시간 · 1회</th>
+              <td id="full-time">—</td>
+              <td id="partial-time">—</td>
+            </tr>
+            <tr>
+              <th scope="row">입력칸에 남아 있는 메모</th>
+              <td id="full-memo">작성 중인 메모</td>
+              <td id="partial-memo">작성 중인 메모</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="comparison-note">
+          ‘기존 요소의 글자만 수정 0개’는 최종 글자가 바뀌지 않았다는 뜻이
+          아닙니다. 전체 교체는 바뀐 글자를 담은 새 요소를 만들므로 생성
+          작업으로 집계합니다. 전체 요소 수에는 목록 ul과 메모 input도 포함하며
+          텍스트 노드는 제외합니다.
+        </p>
+        <p class="comparison-note">
+          이 메모는 입력칸 자체에 보관한 값입니다. HTML 구조가 같아도 입력칸에
+          현재 남은 값은 다를 수 있습니다. 전체 교체 방식도 메모를 별도 상태에
+          저장하고 복원하면 보존할 수 있습니다. 이 실험은 기존 DOM을 재사용하는
+          효과를 보여줍니다. 실제 React의 상태·컴포넌트 관리 이점은 Phase 2에서
+          이어서 확인합니다.
+        </p>
+        <p class="comparison-note">
+          시간 단위 ms는 1/1,000초입니다. 비교 실행 시 두 방식의 실제 작업을 한
+          번씩 자동 측정합니다. 측정용 목록을 추가로 만들거나 반복 실행하지
+          않습니다. 실행 순서는 매번 교대합니다. 전체 교체는 새 DOM 생성·교체,
+          Diff·Patch는 차이 계산·DOM 수정 시간을 포함합니다. 공통 VDOM 입력
+          준비·색상 표시·결과 검사는 제외합니다.
+        </p>
+        <p class="comparison-note">
+          이 시간은 실제 결과 영역을 수정하는 JavaScript·DOM 처리 구간입니다.
+          변경 후 브라우저가 수행하는 배치 계산·화면 그리기를 포함한 전체 시간은
+          아닙니다. 단일 측정은 편차가 크고, 작은 값은 측정 해상도 때문에 0.000
+          ms로 나올 수 있습니다. 같은 조건을 다시 확인하려면 처음 상태로 돌아간
+          뒤 실행하세요.
+        </p>
+        <details open>
+          <summary>Diff가 계산한 변경 명령</summary>
+          <pre id="comparison-patches">[]</pre>
+        </details>
+        <p class="comparison-note">
+          전체 교체는 React를 사용하지 않는 모든 방식을 대표하지 않습니다. 직접
+          DOM을 부분 수정하는 방법도 있습니다. Diff는 비교 계산 비용이 있어 항상
+          더 빠른 것은 아닙니다. 이 결과는 이 Mini React 구현과 현재 실험 조건에
+          대한 결과입니다.
+        </p>
+        <style id="comparison-highlight"></style>
+      </section>
+      <section
+        id="state-panel"
+        role="tabpanel"
+        aria-labelledby="state-tab"
+        hidden
+      >
+        <h2>상태를 바꾸면, 여러 표시가 함께 바뀝니다.</h2>
+        <p>
+          숫자 +1을 누르면 숫자·두 배·요약 문장이 함께 갱신됩니다. 이름 바꾸기는
+          이름 상태만 바꿉니다. 이 탭에서는 Patch 버튼을 따로 누르지 않습니다.
+        </p>
+        <p>
+          <button id="state-open-comparison" type="button">
+            같은 화면으로 두 방식 비교 →
+          </button>
+        </p>
+        <p class="pipeline">
+          클릭 → 상태 변경 함수 → hooks의 자기 칸 저장 → 컴포넌트 재실행 → 기존
+          Diff·Patch
+        </p>
+        <p id="state-status" role="status" class="status"></p>
+        <div id="state-root" class="sample-area"></div>
+        <section class="state-effect" aria-labelledby="state-effect-title">
+          <h3 id="state-effect-title">
+            useEffect · 숫자가 바뀌면 탭 제목도 갱신
+          </h3>
+          <p>
+            숫자 +1을 누른 뒤 실제 브라우저 탭 제목을 확인하세요. 이름만 바꾸면
+            이 작업은 다시 실행하지 않습니다. 처음 화면을 만들 때도 한 번
+            실행합니다.
+          </p>
+          <p>
+            실행 횟수: <output id="state-effect-count">0</output>회 · 의존값:
+            <code id="state-effect-deps">[]</code>
+          </p>
+          <p>탭 제목: <output id="state-title-preview"></output></p>
+          <p id="state-effect-last" role="status"></p>
+          <p class="comparison-note">
+            Effect의 의존값·정리 함수는 hooks[2]에 보관합니다. 이 실행 정보는
+            학습용 표시로 별도 갱신하며, 위 Patch 명령 개수에는 포함하지
+            않습니다.
+          </p>
+        </section>
+        <section class="state-effect" aria-labelledby="state-memo-title">
+          <h3 id="state-memo-title">
+            useMemo · 이름만 바꾸면 계산 결과 재사용
+          </h3>
+          <p>
+            위의 이름 바꾸기를 누르면 컴포넌트는 다시 실행됩니다. 일반 계산은
+            다시 수행하지만, useMemo는 숫자가 같으면 저장된 두 배 값을
+            사용합니다. 숫자 +1을 누르면 두 방식 모두 다시 계산합니다.
+          </p>
+          <table class="comparison-table state-memo-table">
+            <caption>
+              같은 계산 count × 2 · 의존값 [count]
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">확인 항목</th>
+                <th scope="col">일반 계산</th>
+                <th scope="col">useMemo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">현재 계산 결과</th>
+                <td id="state-plain-result">0</td>
+                <td id="state-memo-result">0</td>
+              </tr>
+              <tr>
+                <th scope="row">계산 함수 실행 횟수</th>
+                <td id="state-plain-count">0</td>
+                <td id="state-memo-count">0</td>
+              </tr>
+            </tbody>
+          </table>
+          <p id="state-memo-last" role="status"></p>
+          <p class="comparison-note">
+            캐시된 결과와 의존값은 hooks[3]에 저장합니다. 첫 계산은 두 방식 모두
+            실행합니다. 이 계산은 매우 가벼워 실무에서 굳이 캐시할 필요는
+            없습니다. 속도 향상을 주장하는 예제가 아니라 재계산과 재사용을
+            횟수로 확인하는 실습입니다. 이 표도 학습용 표시로 별도 갱신하며
+            Patch 명령 수에 포함하지 않습니다.
+          </p>
+        </section>
+        <div class="panels state-inspector">
+          <section aria-labelledby="state-hooks-title">
+            <h3 id="state-hooks-title">저장된 상태 값</h3>
+            <p>
+              0번 칸은 숫자, 1번 칸은 이름입니다. 다시 실행해도 이 값은
+              유지됩니다.
+            </p>
+            <pre id="state-hooks"></pre>
+          </section>
+          <section aria-labelledby="state-patches-title">
+            <h3 id="state-patches-title">마지막 갱신의 변경 명령</h3>
+            <p>클릭 후 어떤 위치의 글자가 바뀌었는지 확인하세요.</p>
+            <pre id="state-patches"></pre>
+          </section>
+        </div>
+        <p class="comparison-note">
+          FunctionComponent·useState·useEffect·useMemo가 연결되어 있습니다. 비교
+          실험 · Phase 2 탭에서도 실행 조건을 비교할 수 있습니다. 새로고침하면
+          상태와 실행 횟수는 초기화됩니다.
+        </p>
+      </section>
+      <section
+        id="state-comparison-panel"
+        role="tabpanel"
+        aria-labelledby="state-comparison-tab"
+        hidden
+      >
+        <h2>Phase 2 · 줄어드는 계산, 늘어나는 보관 비용</h2>
+        <p>
+          숫자 × 2는 너무 가벼워 차이를 느끼기 어렵습니다. 이번에는
+          <strong
+            >점수 목록에서 기준 이상인 점수를 골라 목록과 평균을 만드는
+            작업</strong
+          >을 비교합니다. ‘이름’은 결과에 붙이는 표시이고, ‘기준 점수’는 골라낼
+          목록을 바꾸는 조건입니다.
+        </p>
+        <section class="phase2-performance" aria-labelledby="perf-heading">
+          <h3 id="perf-heading">실험 1 · 같은 작업을 세 방식으로 처리</h3>
+          <p>
+            <strong>① 매번 재계산</strong>은 변경할 때마다 전체 점수를
+            검사합니다. <strong>② 직접 캐시</strong>는 이전 기준과 결과를 변수에
+            저장합니다. <strong>③ useMemo</strong>는 같은 재사용을 Hook으로
+            처리합니다. 최종 결과는 세 방식 모두 같아야 합니다.
+          </p>
+          <div class="comparison-controls perf-controls">
+            <label
+              >점수 데이터 수<select id="phase2-perf-size">
+                <option value="1000">1,000개</option>
+                <option value="10000">10,000개</option>
+                <option value="100000" selected>100,000개</option>
+              </select></label
+            >
+            <label
+              >같은 입력 20회<select id="phase2-perf-action">
+                <option value="name">이름만 변경 · 계산 조건 유지</option>
+                <option value="threshold">
+                  기준 점수 변경 · 계산 조건 변경
+                </option>
+              </select></label
+            >
+            <button id="phase2-perf-run" type="button">
+              세 방식 실제 측정
+            </button>
+          </div>
+          <p id="phase2-perf-status" class="status" role="status">
+            먼저 ‘이름만 변경’을 측정하고, 다음에는 ‘기준 점수 변경’을 측정해
+            비교하세요. 자동 실행하지 않습니다.
+          </p>
+          <div id="phase2-perf-results" hidden>
+            <p id="phase2-perf-context"></p>
+            <p id="phase2-perf-takeaway" class="comparison-experience"></p>
+            <h4>변경 20회의 처리 시간 합계 · 짧을수록 적은 시간</h4>
+            <div class="perf-chart-row">
+              <span>매번 재계산</span>
+              <div class="perf-chart-track">
+                <div
+                  id="perf-plain-bar"
+                  class="perf-chart-bar perf-plain"
+                  role="img"
+                ></div>
+              </div>
+              <output id="perf-plain-chart-time"></output>
+            </div>
+            <div class="perf-chart-row">
+              <span>직접 캐시</span>
+              <div class="perf-chart-track">
+                <div
+                  id="perf-manual-cache-bar"
+                  class="perf-chart-bar perf-manual-cache"
+                  role="img"
+                ></div>
+              </div>
+              <output id="perf-manual-cache-chart-time"></output>
+            </div>
+            <div class="perf-chart-row">
+              <span>Mini React · useMemo</span>
+              <div class="perf-chart-track">
+                <div
+                  id="perf-memo-bar"
+                  class="perf-chart-bar perf-memo"
+                  role="img"
+                ></div>
+              </div>
+              <output id="perf-memo-chart-time"></output>
+            </div>
+            <div
+              class="perf-table-scroll"
+              tabindex="0"
+              role="region"
+              aria-label="성능 비교 수치 표, 작은 화면에서 가로로 이동 가능"
+            >
+              <table class="comparison-table perf-table">
+                <caption>
+                  시간은 각 방식 3회 중앙값. 계산 횟수와 버퍼 용량은 1회 실험의
+                  변경 20회 기준입니다.
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">방식</th>
+                    <th scope="col">처리 시간 합계</th>
+                    <th scope="col">그중 계산 시간</th>
+                    <th scope="col">계산 실행</th>
+                    <th scope="col">검사한 점수</th>
+                    <th scope="col">새 버퍼 누적 생성</th>
+                    <th scope="col">갱신 후 캐시 보관</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">매번 재계산</th>
+                    <td id="perf-plain-time"></td>
+                    <td id="perf-plain-compute"></td>
+                    <td id="perf-plain-calls"></td>
+                    <td id="perf-plain-visits"></td>
+                    <td id="perf-plain-allocated"></td>
+                    <td id="perf-plain-retained"></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">직접 캐시</th>
+                    <td id="perf-manual-cache-time"></td>
+                    <td id="perf-manual-cache-compute"></td>
+                    <td id="perf-manual-cache-calls"></td>
+                    <td id="perf-manual-cache-visits"></td>
+                    <td id="perf-manual-cache-allocated"></td>
+                    <td id="perf-manual-cache-retained"></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Mini React · useMemo</th>
+                    <td id="perf-memo-time"></td>
+                    <td id="perf-memo-compute"></td>
+                    <td id="perf-memo-calls"></td>
+                    <td id="perf-memo-visits"></td>
+                    <td id="perf-memo-allocated"></td>
+                    <td id="perf-memo-retained"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p id="phase2-perf-data" class="comparison-note"></p>
+            <div class="perf-result-grid">
+              <div>
+                <h4>매번 재계산</h4>
+                <div id="perf-plain-result" class="perf-result"></div>
+              </div>
+              <div>
+                <h4>직접 캐시</h4>
+                <div id="perf-manual-cache-result" class="perf-result"></div>
+              </div>
+              <div>
+                <h4>Mini React · useMemo</h4>
+                <div id="perf-memo-result" class="perf-result"></div>
+              </div>
+            </div>
+          </div>
+          <details class="perf-method">
+            <summary>시간과 용량은 무엇을 측정하나요?</summary>
+            <ul>
+              <li>
+                처리 시간: 상태·변수 변경부터 요약 DOM 갱신까지
+                performance.now()로 측정합니다. 계산 시간은 그 안의 점수 검사와
+                숫자 버퍼 생성 구간입니다. 브라우저의 실제 페인트·대기·데이터
+                생성·초기 화면 생성·측정 결과 표시는 제외합니다.
+              </li>
+              <li>
+                세 방식 모두 같은 데이터와 계산 함수를 사용합니다. 첫 계산은
+                모두 1회 필요하며 위 수치에서는 제외합니다. 매회 새 상태로
+                시작해 3회 반복하고 실행 순서를 번갈아 바꿉니다. 별도 워밍업은
+                없고, 개발 서버·기기·JIT·GC·시계 정밀도에 따라 시간은
+                달라집니다. 매우 짧은 시간의 차이는 순위를 단정할 근거가
+                아닙니다.
+              </li>
+              <li>
+                계산은 최대 N개의 결과를 담는 Float64Array 버퍼를 만들며, 숫자
+                한 자리당 8 B입니다. 누적 생성량은 계산할 때 새로 만든 버퍼
+                크기의 합이고 현재 RAM 사용량이 아닙니다. 캐시 보관량은 마지막
+                갱신 후 붙잡고 있는 결과의 실제 ArrayBuffer.byteLength이며, 직접
+                재계산은 결과를 표시한 뒤 이 버퍼를 보관하지 않습니다.
+              </li>
+              <li>
+                입력 배열·객체·DOM·Hook·가비지 컬렉터 등 전체 메모리는 측정하지
+                않습니다. 이 예제는 필터 결과 목록을 저장합니다. 평균만 필요하면
+                목록을 만들지 않아 계산의 추가 공간을 O(1)로 줄일 수 있습니다.
+                다음 측정을 시작할 때 이전 캐시 참조를 해제합니다.
+              </li>
+              <li>
+                10만 개는 데이터 수입니다. DOM에 10만 개 상자를 만들지 않고 요약
+                세 개만 표시합니다. 연속 작업 사이에 브라우저에 제어권을
+                돌려주며, 그 대기는 측정 시간에서 뺍니다.
+              </li>
+            </ul>
+          </details>
+          <h4>시간·공간 복잡도 · N은 점수 수, 아래는 변경 한 번 기준</h4>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th scope="col">조건</th>
+                <th scope="col">매번 재계산</th>
+                <th scope="col">직접 캐시 / useMemo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">이름만 변경</th>
+                <td>점수 N개 검사 · O(N)</td>
+                <td>기준 비교 후 재사용 · 이 예제에서 O(1)</td>
+              </tr>
+              <tr>
+                <th scope="row">기준 점수 변경 또는 첫 계산</th>
+                <td>O(N)</td>
+                <td>O(N) · 캐시도 다시 계산</td>
+              </tr>
+              <tr>
+                <th scope="row">계산 중 임시 결과 버퍼</th>
+                <td>O(N)</td>
+                <td>O(N)</td>
+              </tr>
+              <tr>
+                <th scope="row">갱신 사이 캐시로 보관하는 결과 버퍼</th>
+                <td>없음</td>
+                <td>O(N) · 재계산을 줄이는 대신 보관 비용 발생</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="comparison-note">
+            위 복잡도는 이 실험의 계산과 결과 버퍼에 대한 분석이며 React 전체의
+            복잡도가 아닙니다. 직접 캐시도 useMemo와 같은 계산 절약이
+            가능합니다. useState와 useEffect 자체가 코드를 빠르게 만드는 기능은
+            아닙니다. 상태 갱신과 외부 연결의 생명주기를 관리하는 기능이며, 아래
+            실험 2에서 확인합니다.
+          </p>
+        </section>
+        <details class="phase2-management">
+          <summary>
+            실험 2 · 실습과 같은 숫자 화면으로 갱신·정리 방식 비교
+          </summary>
+          <h2>같은 화면, 같은 클릭 · 누가 갱신을 관리할까요?</h2>
+          <p>
+            실습의 ‘숫자와 이름’을 양쪽에 똑같이 배치했습니다. 어느 쪽의 버튼을
+            눌러도 <strong>양쪽에 같은 입력</strong>을 적용합니다. 실습 탭의
+            상태와는 독립적입니다.
+          </p>
+          <p class="pipeline">
+            ① 숫자 +1: 세 표시 함께 갱신 → ② 이름 바꾸기: 계산 횟수 비교 → ③
+            화면 닫기: 외부 구독 정리 확인
+          </p>
+          <p class="comparison-experience">
+            <strong>알림은 왜 있나요?</strong> 채팅방에 들어갈 때 새 메시지를
+            듣기 시작하고, 나갈 때 듣기를 해제하는 상황입니다. ‘채팅 알림
+            보내기’는 서버 없이 이 페이지 안에서 메시지 도착을 흉내 냅니다. 열린
+            상태에서는 수신 횟수가 늘고, 나간 뒤에는 늘지 않아야 합니다. 직접
+            해제하는 코드와 useEffect의 정리 함수를 비교하세요. 속도 측정 버튼이
+            아닙니다.
+          </p>
+          <div class="comparison-controls">
+            <button id="phase2-reset-button" type="button">처음 상태로</button>
+            <button id="phase2-notify-button" type="button">
+              채팅 알림 보내기
+            </button>
+            <button id="phase2-toggle-button" type="button">
+              두 화면 닫기
+            </button>
+          </div>
+          <p id="phase2-comparison-status" role="status" class="status"></p>
+          <div class="phase2-pair">
+            <section id="phase2-manual-panel">
+              <h3>직접 관리 · 일반 JavaScript</h3>
+              <p class="phase2-method">
+                변수 변경 후, 개발자가 DOM 갱신·조건 검사·구독 해제를 직접
+                연결합니다.
+              </p>
+              <div id="phase2-manual-root" class="sample-area"></div>
+              <dl class="phase2-metrics">
+                <div>
+                  <dt>두 배 계산 실행</dt>
+                  <dd><output id="phase2-plain-count">0</output>회</dd>
+                </div>
+                <div>
+                  <dt>외부 제목 미리보기</dt>
+                  <dd><output id="phase2-manual-title"></output></dd>
+                </div>
+                <div>
+                  <dt>외부 제목 갱신</dt>
+                  <dd><output id="phase2-manual-title-runs">0</output>회</dd>
+                </div>
+                <div>
+                  <dt>현재 알림 구독</dt>
+                  <dd><output id="phase2-manual-active">0</output>개</dd>
+                </div>
+                <div>
+                  <dt>수신한 알림</dt>
+                  <dd><output id="phase2-manual-received">0</output>회</dd>
+                </div>
+              </dl>
+              <h4>방금 실제로 실행한 과정</h4>
+              <pre id="phase2-manual-trace" class="phase2-trace"></pre>
+            </section>
+            <section id="phase2-hook-panel">
+              <h3>Mini React · 상태 기반</h3>
+              <p class="phase2-method">
+                상태와 화면의 관계를 작성하면, 엔진이 재실행·Diff·Patch·Effect
+                정리를 연결합니다.
+              </p>
+              <div id="phase2-hook-root" class="sample-area"></div>
+              <dl class="phase2-metrics">
+                <div>
+                  <dt>두 배 계산 실행</dt>
+                  <dd><output id="phase2-memo-count">0</output>회</dd>
+                </div>
+                <div>
+                  <dt>외부 제목 미리보기</dt>
+                  <dd><output id="phase2-hook-title"></output></dd>
+                </div>
+                <div>
+                  <dt>외부 제목 갱신</dt>
+                  <dd><output id="phase2-hook-title-runs">0</output>회</dd>
+                </div>
+                <div>
+                  <dt>현재 알림 구독</dt>
+                  <dd><output id="phase2-hook-active">0</output>개</dd>
+                </div>
+                <div>
+                  <dt>수신한 알림</dt>
+                  <dd><output id="phase2-hook-received">0</output>회</dd>
+                </div>
+              </dl>
+              <h4>방금 실제로 실행한 과정</h4>
+              <pre id="phase2-hook-trace" class="phase2-trace"></pre>
+            </section>
+          </div>
+          <section class="state-effect">
+            <h3>갱신할 곳을 빠뜨리면? · 선택해서 실수 재현</h3>
+            <label class="phase2-fault"
+              ><input id="phase2-omit-summary" type="checkbox" /> 직접 관리
+              코드의 ‘요약 문장 갱신’을 일부러 생략</label
+            >
+            <p>
+              체크 후 숫자 +1을 누르면 왼쪽 요약만 이전 숫자에 남습니다. 체크를
+              끄면 복원됩니다. 이는 개발자가 갱신 코드를 빠뜨린 상황을
+              의도적으로 만든 것입니다. JavaScript로도 올바르게 구현할 수 있고,
+              Mini React도 화면 정의가 잘못되면 틀린 결과를 냅니다.
+            </p>
+          </section>
+          <h3>결과가 같아도, 관리하는 방식이 다릅니다</h3>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th scope="col">비교할 일</th>
+                <th scope="col">직접 관리</th>
+                <th scope="col">Mini React · Phase 2</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">숫자·이름 저장과 화면 갱신</th>
+                <td>
+                  일반 변수 변경 후 갱신 함수를 직접 호출합니다. 함수 안에서
+                  숫자·두 배·요약 DOM을 각각 찾아 씁니다.
+                </td>
+                <td>
+                  useState로 상태를 바꾸면 컴포넌트를 다시 실행합니다. 현재
+                  상태로 화면을 정의하면 Phase 1의 Diff·Patch가 반영합니다.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">이름만 바꿀 때 두 배 계산</th>
+                <td>
+                  이 예제의 공통 갱신 함수는 매번 계산합니다. 필요하면 직접
+                  캐시를 추가할 수도 있습니다.
+                </td>
+                <td>
+                  useMemo의 [count]가 같으면 이전 결과를 재사용합니다.
+                  컴포넌트는 다시 실행됩니다.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">숫자가 바뀔 때 외부 제목 갱신</th>
+                <td>이전 숫자를 변수에 보관하고 if 조건으로 비교합니다.</td>
+                <td>
+                  useEffect에 [count]를 지정합니다. 엔진이 의존값을 비교해 DOM
+                  반영 후 실행합니다.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">화면을 닫을 때 외부 구독 해제</th>
+                <td>닫기 함수에서 구독 해제 함수를 직접 호출합니다.</td>
+                <td>
+                  useEffect가 반환한 정리 함수를 엔진이 unmount 때 호출합니다.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            알림은 이 페이지 안의 실제 이벤트 구독입니다. ‘채팅 알림 보내기 → 두
+            화면 닫기 → 다시 알림 보내기’로 확인하세요. 양쪽 모두 구독이 0개가
+            되고 수신 횟수가 더 늘지 않아야 정상입니다. 외부 제목은 두 방식이
+            같은 브라우저 제목을 덮어쓰지 않도록 각 카드에서 미리보기로
+            보여줍니다.
+          </p>
+          <p class="comparison-note">
+            React 없이도 DOM API나 jQuery로 이런 일을 직접 연결해 왔습니다. 공통
+            갱신 함수·다른 프레임워크로 관리하는 방법도 있으므로 왼쪽이 모든
+            기존 방식을 대표하지는 않습니다. 작은 화면은 직접 관리가 더 단순할
+            수 있습니다. React 방식은 상태·화면·외부 작업의 관계를 모아 관리하기
+            좋지만, 엔진과 규칙을 배우고 VDOM 비교·의존값 검사·캐시 비용을
+            부담합니다. 숫자 × 2는 캐시가 필요 없을 만큼 가볍습니다. 이 실험은
+            관리 책임과 실행 횟수 비교이며 속도 우위를 증명하지 않습니다.
+          </p>
+        </details>
+      </section>
+      <footer>
+        Vanilla JavaScript로 구현한 학습용 프로젝트. 이력은 새로고침하면
+        초기화됩니다.
+      </footer>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>

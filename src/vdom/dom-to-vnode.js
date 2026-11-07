@@ -4,5 +4,31 @@
  * @returns {import('./types.js').VNode}
  */
 export function domToVNode(node) {
-  throw new Error('TODO: domToVNode 구현');
+  if (node.nodeType === Node.TEXT_NODE) {
+    return {
+      type: 'text',
+      value: node.textContent,
+    };
+  }
+
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const props = Object.fromEntries(
+      Array.from(node.attributes, (attribute) => [
+        attribute.name,
+        attribute.value,
+      ]),
+    );
+    const children = Array.from(node.childNodes)
+      .filter((child) => child.nodeType !== Node.COMMENT_NODE)
+      .map((child) => domToVNode(child));
+
+    return {
+      type: 'element',
+      tag: node.localName,
+      props,
+      children,
+    };
+  }
+
+  throw new Error('TODO: 텍스트와 요소 이외의 노드 처리');
 }

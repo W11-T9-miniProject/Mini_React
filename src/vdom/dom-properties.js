@@ -5,5 +5,11 @@
  * @param {string[]} remove
  */
 export function applyProps(element, set, remove = []) {
-  throw new Error('TODO: applyProps 구현');
+  for (const name of remove) {
+    element.removeAttribute(name);
+  }
+
+  for (const [name, value] of Object.entries(set)) {
+    element.setAttribute(name, value);
+  }
 }

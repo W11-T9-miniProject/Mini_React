@@ -1,3 +1,6 @@
+import { applyProps } from './dom-properties.js';
+import { render } from './render.js';
+
 /**
  * 수정 전 기존 대상 참조 확보. 자식 삭제 후 다음 index 순서로 삽입한다.
  * 부모 교체/삭제의 하위 Patch는 Diff에서 생성하지 않는다.
@@ -7,5 +10,81 @@
  * @returns {Node}
  */
 export function patch(root, patches) {
-  throw new Error('TODO: patch 구현');
+  const targets = patches.map((change) => findNode(root, change.path));
+  const insertions = [];
+
+  for (let index = 0; index < patches.length; index += 1) {
+    if (patches[index].type === 'REMOVE') {
+      const target = targets[index];
+      target.parentNode.removeChild(target);
+    }
+  }
+
+  for (let index = 0; index < patches.length; index += 1) {
+    const change = patches[index];
+    const target = targets[index];
+
+    if (change.type === 'REMOVE') {
+      continue;
+    }
+
+    if (change.type === 'INSERT') {
+      insertions.push({ change, parent: target });
+      continue;
+    }
+
+    if (change.type === 'TEXT') {
+      target.textContent = change.value;
+      continue;
+    }
+
+    if (change.type === 'PROPS') {
+      applyProps(target, change.set, change.remove);
+      continue;
+    }
+
+    if (change.type === 'REPLACE') {
+      const replacement = render(change.node);
+
+      if (target.parentNode) {
+        target.parentNode.replaceChild(replacement, target);
+      }
+
+      if (target === root) {
+        root = replacement;
+      }
+
+      continue;
+    }
+
+    throw new Error(`지원하지 않는 변경 명령: ${change.type}`);
+  }
+
+  insertions.sort((a, b) => a.change.index - b.change.index);
+  for (const { change, parent } of insertions) {
+    const children = Array.from(parent.childNodes).filter(
+      (child) => child.nodeType !== Node.COMMENT_NODE,
+    );
+    const reference = children[change.index] ?? null;
+    parent.insertBefore(render(change.node), reference);
+  }
+
+  return root;
+}
+
+function findNode(root, path) {
+  let node = root;
+
+  for (const index of path) {
+    const children = Array.from(node.childNodes).filter(
+      (child) => child.nodeType !== Node.COMMENT_NODE,
+    );
+    node = children[index];
+
+    if (!node) {
+      throw new Error(`DOM 경로를 찾을 수 없습니다: ${path.join(',')}`);
+    }
+  }
+
+  return node;
 }
