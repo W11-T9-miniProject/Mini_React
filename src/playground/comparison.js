@@ -2,6 +2,10 @@ import { domToVNode } from '../vdom/dom-to-vnode.js';
 import { render } from '../vdom/render.js';
 import { diff } from '../vdom/diff.js';
 import { patch } from '../vdom/patch.js';
+import { UNIT_PRICE, DEFAULT_NOTE, money } from './cart-view.js';
+
+const productText = (name, quantity) =>
+  `${name} · 수량 ${quantity}개 · 상품 금액 ${money(quantity * UNIT_PRICE)}`;
 
 export function setupComparison() {
   const tabs = [...document.querySelectorAll('[role="tab"]')].filter(
@@ -49,11 +53,17 @@ export function setupComparison() {
   let scrollTimer;
   const operationInput = document.querySelector('#compare-operation');
   const tagInput = document.querySelector('#compare-tag');
+  const quantityInput = document.querySelector('#compare-quantity');
 
   function updateOperation() {
     indexInput.disabled = ['append', 'remove'].includes(operationInput.value);
     tagInput.disabled = operationInput.value !== 'tag';
     textInput.disabled = operationInput.value === 'remove';
+    quantityInput.closest('label').hidden = operationInput.value !== 'quantity';
+    tagInput.closest('label').hidden = operationInput.value !== 'tag';
+    textInput.closest('label').hidden = !['text', 'append', 'tag'].includes(
+      operationInput.value,
+    );
   }
 
   function showMap(prefix, operations) {
@@ -91,7 +101,7 @@ export function setupComparison() {
     map.replaceChildren(...tiles);
     const perTile = operations.length / slots;
     document.getElementById(`${prefix}-map-unit`).textContent =
-      `요약 지도 ${slots}칸 · 한 칸 = ${Number.isInteger(perTile) ? perTile : `${Math.floor(perTile)}~${Math.ceil(perTile)}`}개 문장${operations.includes('removed') ? ' (삭제 위치 포함)' : ''}`;
+      `요약 지도 ${slots}칸 · 한 칸 = ${Number.isInteger(perTile) ? perTile : `${Math.floor(perTile)}~${Math.ceil(perTile)}`}개 상품${operations.includes('removed') ? ' (삭제 위치 포함)' : ''}`;
     map.setAttribute(
       'aria-label',
       `${prefix === 'full' ? '전체 교체' : 'Diff·Patch'}: 항목 생성 ${operations.filter((operation) => operation === 'created').length}개, 삭제 ${operations.filter((operation) => operation === 'removed').length}개, 내부 요소 교체 ${operations.filter((operation) => operation === 'element').length}개, 기존 요소의 글자만 수정 ${operations.filter((operation) => operation === 'text').length}개`,
@@ -105,13 +115,15 @@ export function setupComparison() {
     const list = document.createElement('ul');
     for (let index = 1; index <= size; index += 1) {
       const item = document.createElement('li');
-      item.textContent = `문장 ${index}`;
+      item.dataset.name = `무선 마우스 ${index}`;
+      item.dataset.quantity = '1';
+      item.textContent = productText(item.dataset.name, 1);
       if (index === 1) {
         const memo = document.createElement('input');
         memo.type = 'text';
         memo.className = 'comparison-memo';
-        memo.setAttribute('aria-label', '목록 안의 메모');
-        memo.placeholder = '비교 전에 메모를 입력하세요';
+        memo.setAttribute('aria-label', '상품의 배송 요청');
+        memo.placeholder = '배송 요청을 입력하세요';
         memo.maxLength = 200;
         item.appendChild(memo);
       }
@@ -120,18 +132,19 @@ export function setupComparison() {
     full.replaceChildren(list);
     partial.replaceChildren(render(domToVNode(list)));
     for (const container of [full, partial]) {
-      container.querySelector('input').value = '작성 중인 메모';
+      container.querySelector('input').value = DEFAULT_NOTE;
     }
     indexInput.max = String(size);
-    indexInput.value = String(size / 2);
-    textInput.value = `수정한 문장 ${size / 2}`;
-    operationInput.value = 'text';
+    indexInput.value = '1';
+    textInput.value = productText('무선 마우스 1', 1);
+    quantityInput.value = '2';
+    operationInput.value = 'quantity';
     tagInput.value = 'strong';
     updateOperation();
     document.querySelector('#compare-index-label').textContent =
-      `바꿀 문장 번호 (1~${size})`;
+      `바꿀 상품 번호 (1~${size})`;
     document.querySelector('#comparison-map-unit').textContent =
-      '색상 지도는 문장 전체를 최대 100칸으로 요약합니다. 문장 수가 바뀌면 한 칸이 뜻하는 문장 수가 바뀝니다. 실제 작업 개수는 각 지도 위 숫자를 확인하세요.';
+      '색상 지도는 상품 전체를 최대 100칸으로 요약합니다. 상품 수가 바뀌면 한 칸이 뜻하는 상품 수가 바뀝니다. 실제 작업 개수는 각 지도 위 숫자를 확인하세요.';
     for (const prefix of ['full', 'partial']) {
       for (const metric of ['kept', 'created', 'removed']) {
         document.getElementById(`${prefix}-${metric}`).textContent = '—';
@@ -142,16 +155,16 @@ export function setupComparison() {
           '—';
       document.getElementById(`${prefix}-work`).textContent =
         '아직 실행하지 않았습니다.';
-      document.getElementById(`${prefix}-memo`).textContent = '작성 중인 메모';
+      document.getElementById(`${prefix}-memo`).textContent = DEFAULT_NOTE;
       document.getElementById(`${prefix}-map-unit`).textContent =
-        `요약 지도 100칸 · 한 칸 = ${size / 100}개 문장`;
+        `요약 지도 100칸 · 한 칸 = ${size / 100}개 상품`;
       showMap(prefix, Array(size).fill('kept'));
     }
     full.classList.remove('has-run');
     highlight.textContent = '';
     commands.textContent = '[]';
     full.scrollTop = partial.scrollTop = 0;
-    status.textContent = `양쪽 모두 문장 1~${size}입니다. 번호와 새 문장을 정한 뒤 비교를 실행하세요.`;
+    status.textContent = `양쪽 모두 상품 1~${size}입니다. 번호와 새 상품을 정한 뒤 비교를 실행하세요.`;
   }
 
   function showCounts(prefix, before, beforeElements, container) {
@@ -202,10 +215,19 @@ export function setupComparison() {
     const size = partial.firstChild.children.length;
     const operation = operationInput.value;
     if (
-      ['text', 'tag'].includes(operation) &&
+      ['quantity', 'text', 'tag'].includes(operation) &&
       (!Number.isInteger(number) || number < 1 || number > size)
     ) {
-      status.textContent = `문장 번호는 1~${size} 사이의 정수로 입력하세요. 화면은 변경하지 않았습니다.`;
+      status.textContent = `상품 번호는 1~${size} 사이의 정수로 입력하세요. 화면은 변경하지 않았습니다.`;
+      return;
+    }
+    const quantity = Number(quantityInput.value);
+    if (
+      operation === 'quantity' &&
+      (!Number.isInteger(quantity) || quantity < 1 || quantity > 99)
+    ) {
+      status.textContent =
+        '상품 수량은 1~99 사이의 정수로 입력하세요. 화면은 변경하지 않았습니다.';
       return;
     }
     if (operation === 'append' && size >= 1000) {
@@ -214,7 +236,8 @@ export function setupComparison() {
       return;
     }
     if (operation === 'remove' && size <= 1) {
-      status.textContent = '마지막 항목은 메모 보존 체험을 위해 남겨 둡니다.';
+      status.textContent =
+        '마지막 항목은 배송 요청 보존 체험을 위해 남겨 둡니다.';
       return;
     }
     const previous = domToVNode(partial.firstChild);
@@ -223,14 +246,30 @@ export function setupComparison() {
       next.children.push({
         type: 'element',
         tag: 'li',
-        props: {},
-        children: [{ type: 'text', value: textInput.value }],
+        props: {
+          'data-name': textInput.value || `무선 마우스 ${size + 1}`,
+          'data-quantity': '1',
+        },
+        children: [
+          {
+            type: 'text',
+            value: productText(textInput.value || `무선 마우스 ${size + 1}`, 1),
+          },
+        ],
       });
     } else if (operation === 'remove') {
       next.children.pop();
     } else {
       const item = next.children[number - 1];
-      const text = { type: 'text', value: textInput.value };
+      if (operation === 'quantity')
+        item.props['data-quantity'] = String(quantity);
+      const text = {
+        type: 'text',
+        value:
+          operation === 'quantity'
+            ? productText(item.props['data-name'], quantity)
+            : textInput.value,
+      };
       if (operation === 'tag') {
         item.children[0] = {
           type: 'element',
@@ -293,6 +332,7 @@ export function setupComparison() {
         ? `#partial-result li:nth-child(${targetIndex + 1}) { background: var(--changed-soft); border-left-color: var(--changed); }`
         : '';
     const action = {
+      quantity: `${number}번 상품 수량 → ${quantity}개`,
       text: `${number}번 글자 수정`,
       tag: `${number}번 내부 태그 → ${tagInput.value}`,
       append: '끝에 항목 추가',

@@ -641,3 +641,155 @@ footer {
     width: 100%;
   }
 }
+.batch-pair {
+  margin-top: 16px;
+}
+.batch-controls {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding-block: 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.batch-controls button {
+  padding: 8px 12px;
+  font: inherit;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  color: var(--ink);
+  cursor: pointer;
+}
+.batch-controls .batch-primary {
+  background: #0055df;
+  color: #fff;
+  border-color: #3285ff;
+}
+.batch-controls button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.batch-pair > section {
+  padding: 16px;
+}
+.batch-pair h3 {
+  margin-block: 0 12px;
+}
+.batch-pair .sample-area {
+  min-height: 0;
+  padding: 14px;
+}
+.batch-pair .cart-view > p {
+  margin-block: 10px;
+}
+.batch-pair .cart-notice {
+  min-height: 0;
+}
+.batch-primary {
+  padding: 12px 22px;
+  background: #0055df;
+  border: 1px solid #3285ff;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.batch-update-label {
+  margin-block: 12px 20px;
+}
+.batch-update-count {
+  font-size: 2rem;
+  font-weight: 700;
+  padding-inline: 8px;
+  background: #3285ff33;
+}
+.batch-trace {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 120px;
+}
+.batch-trace:empty::before {
+  content: '아직 실행 전';
+  color: var(--muted);
+}
+.batch-trace li {
+  padding: 12px 14px;
+  margin-block: 12px;
+  border-left: 4px solid #3285ff;
+  background: #3285ff14;
+  overflow-wrap: anywhere;
+}
+.batch-trace .batch-stage-intermediate {
+  border-left-color: #ff5030;
+  background: #ff503014;
+}
+.batch-trace p {
+  margin-block: 8px;
+}
+
+.batch-snapshot {
+  margin-block: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.batch-snapshot p {
+  margin-block: 10px;
+}
+.batch-changed {
+  background: #3285ff44;
+  border-bottom: 2px solid #3285ff;
+  padding: 2px 4px;
+}
+.batch-stage-intermediate .batch-changed {
+  background: #ff503033;
+  border-bottom-color: #ff5030;
+}
+.batch-highlight-key {
+  font-size: 14px;
+  color: var(--muted);
+}
+.phase2-experiments > details > summary {
+  padding-block: 6px;
+}
+.batch-before {
+  color: var(--muted);
+}
+.cart-view {
+  max-width: 100%;
+}
+.cart-prices {
+  margin-block: 16px;
+}
+.cart-prices > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 7px;
+  border-bottom: 1px solid var(--line);
+}
+.cart-prices dd {
+  margin: 0;
+  font-weight: 700;
+}
+.cart-prices > div:last-child {
+  background: #3285ff1a;
+  padding-inline: 8px;
+}
+.cart-notice {
+  min-height: 2em;
+}
+.cart-actions {
+  flex-wrap: wrap;
+}
+.cart-actions button:disabled {
+  opacity: 0.45;
+}
+.perf-result .cart-view {
+  font-size: 14px;
+}
+.comparison-controls [hidden] {
+  display: none;
+}

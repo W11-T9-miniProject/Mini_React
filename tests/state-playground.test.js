@@ -9,43 +9,72 @@ beforeEach(async () => {
   await import('../src/main.js');
 });
 
-describe('Phase 2 상태 실습', () => {
-  it('이름 변경 시 Memo 계산만 재사용하며 숫자 변경 시 두 방식의 결과가 같다', () => {
-    expect(document.querySelector('#state-memo-count')).not.toBeNull();
-    expect(document.querySelector('#state-plain-count').textContent).toBe('1');
-    expect(document.querySelector('#state-memo-count').textContent).toBe('1');
-    document.querySelector('[data-state-action="rename"]').click();
+describe('Phase 2 장바구니 실습', () => {
+  it('배송 요청만 바꾸면 상품 금액을 재사용하고 수량을 바꾸면 재계산한다', () => {
+    const root = document.querySelector('#state-root');
+    expect(root.querySelector('[data-cart-field="quantity"]').textContent).toBe(
+      '1',
+    );
+    expect(root.querySelector('[data-cart-field="total"]').textContent).toBe(
+      '12,000원',
+    );
+    root.querySelector('[data-cart-action="note"]').click();
+    expect(root.querySelector('[data-cart-field="note"]').textContent).toBe(
+      '경비실에 맡겨주세요',
+    );
     expect(document.querySelector('#state-plain-count').textContent).toBe('2');
     expect(document.querySelector('#state-memo-count').textContent).toBe('1');
-    expect(document.querySelector('#state-memo-last').textContent).toContain(
-      '재사용',
+    root.querySelector('[data-cart-action="add"]').click();
+    expect(root.querySelector('[data-cart-field="subtotal"]').textContent).toBe(
+      '24,000원',
     );
-    document.querySelector('[data-state-action="increment"]').click();
-    expect(document.querySelector('#state-plain-count').textContent).toBe('3');
     expect(document.querySelector('#state-memo-count').textContent).toBe('2');
-    expect(document.querySelector('#state-plain-result').textContent).toBe('2');
-    expect(document.querySelector('#state-memo-result').textContent).toBe('2');
-    expect(document.querySelector('#state-memo-last').textContent).toContain(
-      '새로 계산',
-    );
   });
-
-  it('숫자 변경만 Effect를 실행하며 이름 변경은 탭 제목 작업을 반복하지 않는다', () => {
-    expect(document.querySelector('#state-effect-count')).not.toBeNull();
+  it('수량을 바꿀 때만 브라우저 탭의 장바구니 수량을 갱신한다', () => {
+    const root = document.querySelector('#state-root');
+    root.querySelector('[data-cart-action="note"]').click();
     expect(document.querySelector('#state-effect-count').textContent).toBe('1');
-    document.querySelector('[data-state-action="rename"]').click();
-    expect(document.querySelector('#state-effect-count').textContent).toBe('1');
-    document.querySelector('[data-state-action="increment"]').click();
-    expect(document.title).toBe('Mini React · 현재 숫자: 1');
+    root.querySelector('[data-cart-action="add"]').click();
+    expect(document.title).toBe('장바구니 · 상품 2개');
     expect(document.querySelector('#state-effect-count').textContent).toBe('2');
-    expect(document.querySelector('#state-effect-deps').textContent).toBe(
-      '[1]',
+  });
+  it('쿠폰은 할인과 안내를 바꾸고 안내는 독립적으로 닫을 수 있다', () => {
+    const root = document.querySelector('#state-root');
+    root.querySelector('[data-cart-action="coupon"]').click();
+    expect(root.querySelector('[data-cart-field="discount"]').textContent).toBe(
+      '-3,000원',
     );
-    expect(document.querySelector('#state-effect-last').textContent).toContain(
-      '화면 숫자 1',
+    expect(root.querySelector('[data-cart-field="total"]').textContent).toBe(
+      '9,000원',
+    );
+    expect(root.querySelector('[data-cart-field="notice"]').textContent).toBe(
+      '3,000원 쿠폰이 적용되었습니다.',
+    );
+    root.querySelector('[data-cart-action="dismiss"]').click();
+    expect(root.querySelector('[data-cart-field="notice"]').textContent).toBe(
+      '쿠폰 안내 없음',
+    );
+    expect(root.querySelector('[data-cart-field="total"]').textContent).toBe(
+      '9,000원',
     );
   });
-
+  it('수량은 1개 미만이 되지 않고 같은 상품 DOM과 실습 상태를 유지한다', () => {
+    const root = document.querySelector('#state-root article');
+    const remove = root.querySelector('[data-cart-action="remove"]');
+    expect(remove.disabled).toBe(true);
+    root.querySelector('[data-cart-action="add"]').click();
+    remove.click();
+    remove.click();
+    expect(root.querySelector('[data-cart-field="quantity"]').textContent).toBe(
+      '1',
+    );
+    expect(document.querySelector('#state-root article')).toBe(root);
+    document.querySelector('#state-comparison-tab').click();
+    document.querySelector('#state-tab').click();
+    expect(root.querySelector('[data-cart-field="total"]').textContent).toBe(
+      '12,000원',
+    );
+  });
   it('Phase별 실습·실험 순서대로 키보드로 이동한다', () => {
     const tabs = [...document.querySelectorAll('[role="tab"]')];
     expect(
@@ -78,54 +107,5 @@ describe('Phase 2 상태 실습', () => {
       new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
     );
     expect(document.activeElement).toBe(tabs[0]);
-  });
-
-  it('상태 탭을 열고 클릭하면 상태와 여러 표시가 함께 갱신된다', () => {
-    const tab = document.querySelector('#state-tab');
-    expect(tab).not.toBeNull();
-    tab.click();
-    expect(document.querySelector('#state-panel').hidden).toBe(false);
-    expect(document.querySelector('#practice-panel').hidden).toBe(true);
-    const root = document.querySelector('#state-root article');
-    const count = root.querySelector('[data-count]');
-    const button = root.querySelector('[data-state-action="increment"]');
-    button.click();
-    button.click();
-    expect(count.textContent).toBe('2');
-    expect(root.querySelector('[data-double]').textContent).toBe('4');
-    expect(root.querySelector('[data-summary]').textContent).toBe(
-      '정글님의 현재 숫자는 2입니다.',
-    );
-    expect(
-      JSON.parse(document.querySelector('#state-hooks').textContent),
-    ).toEqual([2, '정글']);
-    expect(document.querySelector('#state-root article')).toBe(root);
-    expect(root.querySelector('[data-state-action="increment"]')).toBe(button);
-    expect(
-      JSON.parse(document.querySelector('#state-patches').textContent).every(
-        (change) => change.type === 'TEXT',
-      ),
-    ).toBe(true);
-  });
-
-  it('두 상태가 서로 다른 칸을 사용하며 탭 이동 후에도 유지된다', () => {
-    const tab = document.querySelector('#state-tab');
-    expect(tab).not.toBeNull();
-    tab.click();
-    document.querySelector('[data-state-action="increment"]').click();
-    document.querySelector('[data-state-action="rename"]').click();
-    expect(
-      JSON.parse(document.querySelector('#state-hooks').textContent),
-    ).toEqual([1, '학습자']);
-    document.querySelector('[data-state-action="increment"]').click();
-    expect(
-      JSON.parse(document.querySelector('#state-hooks').textContent),
-    ).toEqual([2, '학습자']);
-    document.querySelector('#comparison-tab').click();
-    document.querySelector('#state-tab').click();
-    expect(document.querySelector('[data-count]').textContent).toBe('2');
-    expect(document.querySelector('[data-summary]').textContent).toContain(
-      '학습자',
-    );
   });
 });

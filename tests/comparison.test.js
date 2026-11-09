@@ -7,6 +7,11 @@ beforeEach(async () => {
   vi.resetModules();
   document.body.innerHTML = page.match(/<body>([\s\S]*)<\/body>/)[1];
   await import('../src/main.js');
+  const operation = document.querySelector('#compare-operation');
+  operation.value = 'text';
+  operation.dispatchEvent(new Event('change'));
+  document.querySelector('#compare-index').value = '50';
+  document.querySelector('#compare-text').value = '수정한 상품 표시 50';
 });
 
 describe('Phase 1 비교 화면', () => {
@@ -21,7 +26,7 @@ describe('Phase 1 비교 화면', () => {
     expect(document.querySelector('#actual-root article')).not.toBeNull();
   });
 
-  it('한 문장 수정 시 두 결과는 같고 추가 실행 없이 처리 시간을 표시한다', () => {
+  it('상품 표시 문구 수정 시 두 결과는 같고 추가 실행 없이 처리 시간을 표시한다', () => {
     const button = document.querySelector('#compare-run');
     expect(button).not.toBeNull();
     const full = document.querySelector('#full-result');
@@ -32,16 +37,18 @@ describe('Phase 1 비교 화면', () => {
     expect(full.innerHTML).toBe(partial.innerHTML);
     expect(partial.querySelectorAll('li')).toHaveLength(100);
     expect(partial.querySelectorAll('li')[49].textContent).toBe(
-      '수정한 문장 50',
+      '수정한 상품 표시 50',
     );
-    expect(partial.querySelectorAll('li')[48].textContent).toBe('문장 49');
+    expect(partial.querySelectorAll('li')[48].textContent).toBe(
+      '무선 마우스 49 · 수량 1개 · 상품 금액 12,000원',
+    );
     expect(oldFull.every((li) => !full.contains(li))).toBe(true);
     expect(oldPartial.every((li) => partial.contains(li))).toBe(true);
     expect(document.querySelector('#full-kept').textContent).toBe('0');
     expect(document.querySelector('#partial-kept').textContent).toBe('100');
     expect(
       JSON.parse(document.querySelector('#comparison-patches').textContent),
-    ).toEqual([{ type: 'TEXT', path: [49, 0], value: '수정한 문장 50' }]);
+    ).toEqual([{ type: 'TEXT', path: [49, 0], value: '수정한 상품 표시 50' }]);
     expect(
       document.querySelectorAll('#full-map [data-operation="created"]'),
     ).toHaveLength(100);
@@ -87,7 +94,7 @@ describe('Phase 1 비교 화면', () => {
     );
     document.querySelector('#compare-reset').click();
     expect(document.querySelector('#partial-result li').textContent).toBe(
-      '문장 1',
+      '무선 마우스 1 · 수량 1개 · 상품 금액 12,000원',
     );
     expect(document.querySelectorAll('#partial-result li')).toHaveLength(100);
     expect(document.querySelector('#full-time').textContent).toBe('—');
@@ -126,6 +133,9 @@ describe('Phase 1 비교 화면', () => {
     size.dispatchEvent(new Event('change'));
     expect(document.querySelectorAll('#full-result li')).toHaveLength(1000);
     expect(document.querySelectorAll('#partial-result li')).toHaveLength(1000);
+    const operation = document.querySelector('#compare-operation');
+    operation.value = 'text';
+    operation.dispatchEvent(new Event('change'));
     document.querySelector('#compare-index').value = '1000';
     document.querySelector('#compare-text').value = '마지막 변경';
     const createElement = vi.spyOn(document, 'createElement');
@@ -141,10 +151,10 @@ describe('Phase 1 비교 화면', () => {
     expect(document.querySelector('#partial-kept').textContent).toBe('1000');
     expect(document.querySelectorAll('#partial-map span')).toHaveLength(100);
     expect(document.querySelector('#full-map-unit').textContent).toContain(
-      '한 칸 = 10개 문장',
+      '한 칸 = 10개 상품',
     );
     expect(document.querySelector('#partial-map-unit').textContent).toContain(
-      '한 칸 = 10개 문장',
+      '한 칸 = 10개 상품',
     );
     expect([...size.options].map((option) => option.value)).toEqual([
       '100',
@@ -273,4 +283,35 @@ describe('Phase 1 비교 화면', () => {
       document.querySelector('#partial-result').innerHTML,
     );
   });
+});
+
+it('상품 수량 변경은 금액을 함께 바꾸며 배송 요청 입력값과 기존 DOM을 보존한다', () => {
+  document.querySelector('#compare-reset').click();
+  expect(document.querySelector('#compare-operation').value).toBe('quantity');
+  document.querySelector('#compare-index').value = '1';
+  document.querySelector('#compare-quantity').value = '2';
+  const item = document.querySelector('#partial-result li');
+  const note = document.querySelector('#partial-result input');
+  note.value = '경비실에 맡겨주세요';
+  document.querySelector('#compare-run').click();
+  expect(document.querySelector('#partial-result li')).toBe(item);
+  expect(item.textContent).toContain('수량 2개 · 상품 금액 24,000원');
+  expect(document.querySelector('#full-result').innerHTML).toBe(
+    document.querySelector('#partial-result').innerHTML,
+  );
+  expect(document.querySelector('#full-result input').value).toBe('');
+  expect(note.value).toBe('경비실에 맡겨주세요');
+  expect(document.querySelector('#partial-kept').textContent).toBe('100');
+  expect(document.querySelector('#partial-elements-created').textContent).toBe(
+    '0',
+  );
+  for (const value of ['0', '1.5', '100', '']) {
+    const before = item.outerHTML;
+    document.querySelector('#compare-quantity').value = value;
+    document.querySelector('#compare-run').click();
+    expect(item.outerHTML).toBe(before);
+    expect(document.querySelector('#comparison-status').textContent).toContain(
+      '1~99',
+    );
+  }
 });

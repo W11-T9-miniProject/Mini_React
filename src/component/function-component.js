@@ -3,6 +3,58 @@ import { diff } from '../vdom/diff.js';
 import { patch } from '../vdom/patch.js';
 
 let activeComponent = null;
+let batchDepth = 0;
+const pendingUpdates = new Map();
+
+function flushBatchedUpdates() {
+  const errors = [];
+  while (pendingUpdates.size) {
+    const [owner, saved] = pendingUpdates.entries().next().value;
+    pendingUpdates.delete(owner);
+    if (!owner.root || owner.hooks !== saved.hooks) continue;
+    const version = owner.commitVersion;
+    try {
+      owner.update();
+    } catch (error) {
+      // DOM 반영 전의 실패만 복구한다. Effect 오류로 이미 커밋한 상태는 유지한다.
+      if (owner.commitVersion === version) {
+        for (const [slot, value] of saved.states) slot.value = value;
+      }
+      errors.push(error);
+    }
+  }
+  if (errors.length === 1) throw errors[0];
+  if (errors.length > 1)
+    throw new AggregateError(errors, '여러 배칭 갱신이 실패했습니다.');
+}
+
+export function batch(callback) {
+  if (typeof callback !== 'function')
+    throw new TypeError('batch에는 함수를 전달하세요.');
+  if (activeComponent)
+    throw new Error('렌더 중에는 batch를 실행할 수 없습니다.');
+  batchDepth += 1;
+  let result;
+  const errors = [];
+  try {
+    result = callback();
+  } catch (error) {
+    errors.push(error);
+  } finally {
+    batchDepth -= 1;
+    if (batchDepth === 0) {
+      try {
+        flushBatchedUpdates();
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+  }
+  if (errors.length === 1) throw errors[0];
+  if (errors.length > 1)
+    throw new AggregateError(errors, '배칭 콜백과 갱신이 실패했습니다.');
+  return result;
+}
 
 export class FunctionComponent {
   constructor(component, container, props = {}) {
@@ -106,6 +158,7 @@ export class FunctionComponent {
 
   unmount() {
     if (!this.root) return;
+    pendingUpdates.delete(this);
     this.root.remove();
     this.root = null;
     this.vnode = null;
@@ -159,7 +212,17 @@ export function useState(initialValue) {
       const next =
         typeof nextValue === 'function' ? nextValue(previous) : nextValue;
       if (Object.is(previous, next)) return;
+      const deferred = batchDepth > 0 || pendingUpdates.has(owner);
+      if (deferred && !pendingUpdates.has(owner)) {
+        pendingUpdates.set(owner, {
+          hooks: owner.hooks,
+          states: owner.hooks
+            .filter((hook) => hook.kind === 'state')
+            .map((hook) => [hook, hook.value]),
+        });
+      }
       slot.value = next;
+      if (deferred) return;
       const version = owner.commitVersion;
       try {
         owner.update();
