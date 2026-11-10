@@ -1,5 +1,17 @@
 # Mini React Lab
 
+첫 화면의 **DOM → VDOM → Diff → Patch 이야기**는 실제 적용을 기다리는 실습입니다. 실제 DOM을 읽어 기존 VDOM을 만들고, 신규 VDOM만 편집합니다. 노드들이 하나씩 만나 비교하고 Diff 캐릭터가 변경 명령을 모읍니다. 비교가 끝난 뒤 Patch 캐릭터를 누르면 명령을 들고 DOM으로 걸어가며, 도착한 시점에만 실제 `patch()`를 실행합니다. 초안 작성·비교·자동 재생 중에는 실제 DOM을 변경하지 않습니다. State +3도 실제 Hooks로 신규 VDOM을 만들되, 화면 반영은 같은 Patch 단계에서 진행합니다.
+
+아래 설명의 완료 기록 재생 화면은 **고급 관찰**을 펼치면 볼 수 있습니다. 메인 이야기는 기록 복제 화면이 아니라 Patch 전후 같은 실제 DOM 객체를 직접 사용하는 실습입니다.
+
+첫 화면 **Node World**에서 Phase 1과 Phase 2의 실제 엔진 실행을 하나의 캐릭터 트리로 관찰할 수 있습니다. 부모와 자식 캐릭터는 가지로 연결되며, 새 VDOM 버전은 무대 밖에서 들어오고 이전 버전은 밖으로 퇴장합니다. 이동은 같은 캐릭터가 다른 가지 자리로 움직입니다. 말 바꾸기·옷 갈아입기·추가·삭제·교체·이동은 실제 Diff/Patch를 실행하고, State +3은 실제 Hooks 배칭을 실행합니다. Patch 목록, 단계 재생, Phase 필터, 최근 32개 기록을 제공합니다. 최신 트리 캐릭터를 선택하면 대응하는 실제 DOM 요소를 강조합니다.
+
+캐릭터의 버전 교대와 실제 DOM 교체는 구분합니다. TEXT/PROPS는 새 VDOM 버전 캐릭터를 보여주지만 실제 DOM 객체는 재사용하고, REPLACE는 실제 DOM도 교체합니다.
+
+비교 보드에서 **이전 VDOM / 다음 VDOM / 실제 DOM**을 함께 봅니다. 변경된 노드와 유지된 노드를 구분하고, 같은 노드를 선택해 대응 위치를 따라갈 수 있습니다. 비교 단계에서는 관찰용 DOM이 이전 상태를 유지하고, 적용 단계에서는 프로젝트의 실제 Diff/Patch 엔진으로 그 DOM을 부분 갱신합니다. 재사용 여부는 DOM 객체 참조로 확인합니다. 원본 실습은 이미 완료된 상태이므로 이 보드는 기록을 독립된 실제 DOM으로 재생하며, 이벤트 함수는 실행하지 않습니다.
+
+캐릭터 재생은 완료된 실행의 관찰 기록이며 엔진을 일시정지하거나 앱 상태를 복원하지 않습니다. Undo/Redo 버튼은 Node World의 Phase 1 상태만 복원합니다. HTML 직접 편집과 할 일 앱 실습에서 발생한 변경도 같은 관찰 화면에 기록됩니다. 이벤트 함수는 표시 문자열로 복사하며, 관찰 기록은 History나 런타임에 다시 적용하지 않습니다.
+
 Vanilla JavaScript로 직접 구현한 Virtual DOM, Diff, Patch와 함수형 컴포넌트·Hooks 실습 프로젝트입니다. **React/Vue 등 UI 프레임워크를 사용하지 않습니다.**
 
 브라우저에서 세 화면을 사용할 수 있습니다.
@@ -134,7 +146,7 @@ History는 Phase 1용 직렬화 가능한 VDOM을 저장합니다. Phase 2의 �
 | 요구사항                              | 구현 위치 / 확인                      |
 | ------------------------------------- | ------------------------------------- |
 | DOM → Virtual DOM                     | vdom/dom-to-vnode.js                  |
-| 다섯 가지 Diff와 부분 Patch           | vdom/diff.js, patch.js                |
+| Diff와 부분 Patch, key 기반 이동      | vdom/diff.js, patch.js                |
 | 실제/테스트 영역과 편집               | playground/controller.js, editor.js   |
 | Patch/뒤로/앞으로                     | controller.js + history/history.js    |
 | FunctionComponent 클래스와 hooks 배열 | runtime/function-component.js         |
@@ -151,6 +163,8 @@ History는 Phase 1용 직렬화 가능한 VDOM을 저장합니다. Phase 2의 �
 
 실제 브라우저 조작 검증은 `docs/MANUAL_TESTS.md`를 따라 수행하세요. jsdom 테스트는 실제 레이아웃이나 한글 IME를 재현하지 않습니다.
 
-이 엔진은 동기식 인덱스 비교와 루트 Hook만 지원합니다. Fiber/Concurrent Rendering, 자식별 Hook/State, key 기반 이동, Fragment, Portal, Error Boundary, SSR/Hydration 등은 구현하지 않았습니다. Hook은 최상위에서 항상 같은 순서로 사용하고 상태 객체/배열은 새 값으로 갱신하세요.
+이 엔진은 동기식 Diff/Patch와 루트 Hook을 지원합니다. 이전과 다음 목록의 모든 형제 요소에 고유한 `props.key`가 있으면 같은 key와 태그의 DOM 노드를 재사용합니다. key가 없거나 일부에만 있거나 중복되면 인덱스로 비교합니다. 예를 들어 `h('li', { key: id }, label)`처럼 요소에 key를 전달합니다.
+
+Fiber/Concurrent Rendering, 자식별 Hook/State, Fragment, Portal, Error Boundary, SSR/Hydration은 범위 밖입니다. Hook은 최상위에서 항상 같은 순서로 사용하고 상태 객체/배열은 새 값으로 갱신하세요.
 
 학습은 **[Top-down 안내](docs/TOP_DOWN.md)**부터 시작하세요.

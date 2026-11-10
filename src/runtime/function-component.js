@@ -39,6 +39,7 @@ export class FunctionComponent {
     } finally {
       context.current = null;
     }
+    const previous = this.vnode ?? null;
     const changes = this.vnode ? diff(this.vnode, next) : [];
     if (this.vnode) this.root = patch(this.root, changes);
     else {
@@ -57,6 +58,9 @@ export class FunctionComponent {
       }
     }
     this.onCommit?.({
+      previous,
+      next,
+      root: this.root,
       renderCount: this.renderCount,
       memoRuns: this.memoRuns,
       patches: changes,

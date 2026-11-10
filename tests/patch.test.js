@@ -9,6 +9,81 @@ function update(a, b) {
   return patch(render(a), diff(a, b));
 }
 describe('patch', () => {
+  it('key가 있는 목록을 재정렬할 때 기존 DOM 노드를 이동한다', () => {
+    const list = (...keys) =>
+      h(
+        'ul',
+        {},
+        keys.map((key) => h('li', { key }, key)),
+      );
+    const a = list('A', 'B', 'C');
+    const root = render(a);
+    const [first, second, third] = root.children;
+
+    patch(root, diff(a, list('C', 'A', 'B')));
+
+    expect(root.textContent).toBe('CAB');
+    expect(root.children[0]).toBe(third);
+    expect(root.children[1]).toBe(first);
+    expect(root.children[2]).toBe(second);
+    expect(root.querySelector('[key]')).toBeNull();
+  });
+  it('key 이동과 추가, 삭제, 태그 교체, 자식 변경을 함께 적용한다', () => {
+    const a = h('ul', {}, [
+      h('li', { key: 'a' }, h('span', {}, 'old')),
+      h('li', { key: 'b' }, 'B'),
+      h('li', { key: 'c' }, 'C'),
+    ]);
+    const b = h('ul', {}, [
+      h('li', { key: 'd' }, 'D'),
+      h('strong', { key: 'c' }, 'new C'),
+      h('li', { key: 'a' }, h('span', {}, 'new A')),
+    ]);
+    const root = render(a);
+    const [moved, removed, replaced] = root.children;
+    const child = moved.firstChild;
+
+    patch(root, diff(a, b));
+
+    expect(root.innerHTML).toBe(
+      '<li>D</li><strong>new C</strong><li><span>new A</span></li>',
+    );
+    expect(root.children[2]).toBe(moved);
+    expect(moved.firstChild).toBe(child);
+    expect(root.contains(removed)).toBe(false);
+    expect(root.contains(replaced)).toBe(false);
+  });
+  it.each([
+    [undefined, undefined, undefined],
+    ['a', undefined, 'c'],
+    ['a', 'a', 'c'],
+  ])('고유 key가 부족한 목록은 기존 인덱스로 비교한다', (aKey, bKey, cKey) => {
+    const item = (key, label) =>
+      h('li', key === undefined ? {} : { key }, label);
+    const a = h('ul', {}, item(aKey, 'A'), item(bKey, 'B'), item(cKey, 'C'));
+    const b = h('ul', {}, item(cKey, 'C'), item(aKey, 'A'), item(bKey, 'B'));
+    const root = render(a);
+    const [first, second, third] = root.children;
+
+    patch(root, diff(a, b));
+
+    expect(root.textContent).toBe('CAB');
+    expect(root.children[0]).toBe(first);
+    expect(root.children[1]).toBe(second);
+    expect(root.children[2]).toBe(third);
+  });
+  it('key가 있는 option을 이동한 뒤에도 select의 value를 적용한다', () => {
+    const option = (value) => h('option', { key: value, value }, value);
+    const a = h('select', { value: 'b' }, option('a'), option('b'));
+    const b = h('select', { value: 'b' }, option('b'), option('a'));
+    const root = render(a);
+    const selectedOption = root.options[1];
+
+    patch(root, diff(a, b));
+
+    expect(root.options[0]).toBe(selectedOption);
+    expect(root.value).toBe('b');
+  });
   it('연속 삭제와 다른 형제 텍스트 수정을 안전하게 적용한다', () => {
     const a = h(
       'div',

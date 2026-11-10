@@ -7,7 +7,7 @@ import { diff } from '../vdom/diff.js';
 import { patch } from '../vdom/patch.js';
 import { createHistory } from '../history/history.js';
 
-export function setupPlayground(scope = document) {
+export function setupPlayground(scope = document, onFrame = () => {}) {
   const get = (id) => scope.querySelector('#' + id);
   const actualContainer = get('actual-root'),
     testContainer = get('test-root');
@@ -75,9 +75,19 @@ export function setupPlayground(scope = document) {
       return;
     }
     const next = domToVNode(testRoot);
-    const patches = diff(history.current(), next);
+    const previous = history.current();
+    const patches = diff(previous, next);
     actualRoot = patch(actualRoot, patches);
     if (patches.length) history.push(next);
+    onFrame({
+      source: 'phase1',
+      stream: 'playground',
+      label: 'HTML 변경 적용',
+      previous,
+      next,
+      patches,
+      root: actualRoot,
+    });
     showPatches(get('patch-output'), patches);
     get('patch-count').textContent = String(patches.length);
     syncSource();
@@ -94,6 +104,15 @@ export function setupPlayground(scope = document) {
     const patches = diff(previous, target);
     actualRoot = patch(actualRoot, patches);
     testRoot = patch(testRoot, diff(domToVNode(testRoot), target));
+    onFrame({
+      source: 'phase1',
+      stream: 'playground',
+      label: direction === 'undo' ? '이전 상태로' : '다음 상태로',
+      previous,
+      next: target,
+      patches,
+      root: actualRoot,
+    });
     invalid = false;
     syncSource();
     refresh();
@@ -165,6 +184,15 @@ export function setupPlayground(scope = document) {
   refresh();
   showPatches(get('patch-output'), []);
   message('준비 완료. HTML 코드 또는 테스트 화면을 편집해 보세요.');
+  onFrame({
+    source: 'phase1',
+    stream: 'playground',
+    label: 'DOM → VDOM · 처음 만난 노드',
+    previous: null,
+    next: history.current(),
+    patches: [],
+    root: actualRoot,
+  });
   return {
     history,
     commit,

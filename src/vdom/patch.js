@@ -16,7 +16,7 @@ export function patch(root, patches) {
       throw new Error('Patch 대상 경로가 없습니다: ' + change.path.join('.'));
     return { change, target };
   });
-  // select.value は option 子の更新後に適用する。
+
   const properties = [];
   for (const { change, target } of targets) {
     switch (change.type) {
@@ -35,6 +35,14 @@ export function patch(root, patches) {
           children(target)[change.index] ?? null,
         );
         break;
+      case 'MOVE': {
+        const parent = target.parentNode;
+        const siblings = children(parent);
+        if (siblings[change.index] === target) break;
+        const others = siblings.filter((node) => node !== target);
+        parent.insertBefore(target, others[change.index] ?? null);
+        break;
+      }
       case 'REPLACE': {
         const replacement = render(change.node);
         target.replaceWith(replacement);

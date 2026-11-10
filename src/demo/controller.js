@@ -2,7 +2,7 @@ import { FunctionComponent } from '../runtime/index.js';
 import { App } from './app.js';
 import { showPatches } from '../playground/patch-view.js';
 
-export function setupDemo(scope = document) {
+export function setupDemo(scope = document, onFrame = () => {}) {
   const get = (id) => scope.querySelector('#' + id);
   let instance;
   const entries = [];
@@ -13,6 +13,14 @@ export function setupDemo(scope = document) {
   function mount() {
     instance = new FunctionComponent(App, { logEffect });
     instance.onCommit = (info) => {
+      onFrame({
+        ...info,
+        source: 'phase2',
+        stream: 'demo',
+        label: info.previous
+          ? 'State → VDOM → Diff → Patch → Effect'
+          : '컴포넌트 Mount',
+      });
       get('render-count').textContent = info.renderCount;
       get('memo-count').textContent = info.memoRuns;
       get('runtime-patch-count').textContent = info.patches.length;
@@ -29,7 +37,17 @@ export function setupDemo(scope = document) {
   function toggle() {
     if (instance.disposed) mount();
     else {
+      const previous = instance.vnode;
       instance.unmount();
+      onFrame({
+        source: 'phase2',
+        stream: 'demo',
+        label: 'Unmount · Effect 정리',
+        previous,
+        next: null,
+        patches: [],
+        root: null,
+      });
       get('runtime-status').textContent =
         'Unmount 완료 · 모든 Effect 정리. 다시 Mount하면 초기 상태로 시작합니다.';
       get('mount-toggle').textContent = '다시 Mount';

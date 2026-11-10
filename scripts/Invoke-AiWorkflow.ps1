@@ -16,6 +16,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::OutputEncoding = $OutputEncoding
+$env:NO_COLOR = '1'
 
 if ([string]::IsNullOrWhiteSpace($Task)) {
     throw 'Provide a task with a concrete acceptance criterion.'
@@ -46,6 +48,8 @@ function Assert-ChangeScope($baseline, $allowedFiles) {
 }
 
 Push-Location -LiteralPath (Join-Path $PSScriptRoot '..')
+$stage = 'PREFLIGHT'
+$stageLog = $null
 try {
     $baseline = git rev-parse --verify HEAD
     if ($LASTEXITCODE -ne 0) { throw 'PREFLIGHT_FAILED: Could not resolve the baseline commit.' }
@@ -76,12 +80,15 @@ try {
 
     if (-not $PlanOnly) {
         Write-Host 'PREFLIGHT: npm run check'
-        npm.cmd run check 2>&1 | Tee-Object -FilePath (Join-Path $runDirectory 'baseline.log')
+        $stageLog = Join-Path $runDirectory 'baseline.log'
+        npm.cmd run check 2>&1 | Tee-Object -FilePath $stageLog
         if ($LASTEXITCODE -ne 0) { throw 'BASELINE_FAILED: Fix or investigate the baseline before starting this task.' }
         Assert-ChangeScope $baseline @()
     }
 
-    Write-Host 'DESIGN: read-only planner'
+    $stage = 'DESIGN'
+    $stageLog = Join-Path $runDirectory 'design.log'
+    Write-Host "DESIGN: read-only planner (log: $stageLog)"
     $planPath = Join-Path $runDirectory 'plan.json'
     $planSchemaPath = Join-Path $runDirectory 'plan.schema.json'
     @'
@@ -110,9 +117,9 @@ paths with letters, digits, underscores, hyphens, and dots. Include new files if
 Set browser_check_required if a real browser check is part of acceptance.
 Return blocked and explain why in summary if the request is ambiguous or needs files outside those locations.
 "@
-    $designPrompt | codex --ask-for-approval never exec --sandbox read-only `
+    $designPrompt | codex --ask-for-approval never exec --disable apps --color never --sandbox read-only `
         --output-schema $planSchemaPath --output-last-message $planPath - 2>&1 |
-        Tee-Object -FilePath (Join-Path $runDirectory 'design.log')
+        Set-Content -LiteralPath $stageLog -Encoding utf8
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $planPath -PathType Leaf)) {
         throw 'DESIGN_FAILED: Codex CLI did not produce a plan.'
     }
@@ -139,7 +146,9 @@ Return blocked and explain why in summary if the request is ambiguous or needs f
 
     $feedback = 'First attempt. For a bug, reproduce it before editing. If required information is missing, explain what is needed and leave files untouched.'
     for ($attempt = 1; $attempt -le $MaxRetries + 1; $attempt++) {
-        Write-Host "IMPLEMENT: attempt $attempt"
+        $stage = 'IMPLEMENT'
+        $stageLog = Join-Path $runDirectory "implement-$attempt.log"
+        Write-Host "IMPLEMENT: attempt $attempt (log: $stageLog)"
         $implementPrompt = @"
 You own only the IMPLEMENT step of the Mini React workflow. Follow AGENTS.md.
 Task and acceptance criteria:
@@ -152,19 +161,22 @@ Evidence from the previous step:
 $feedback
 
 Inspect the relevant code and tests, then make the smallest scoped change.
+Use the file editing tool, or PowerShell or Node.js when a shell edit is needed. Python is optional.
 Edit only the exact allowed_files in the design plan. Keep HEAD and the index unchanged.
 Do not commit, push, or edit workflow rules. Report scope blockers without expanding scope.
 The runner runs npm run check and requests a separate review after this step.
 Summarize the change, reproduction evidence, and any unresolved blocker.
 "@
-        $implementPrompt | codex --ask-for-approval never exec --sandbox workspace-write - 2>&1 |
-            Tee-Object -FilePath (Join-Path $runDirectory "implement-$attempt.log")
+        $implementPrompt | codex --ask-for-approval never exec --disable apps --color never --sandbox workspace-write - 2>&1 |
+            Set-Content -LiteralPath $stageLog -Encoding utf8
         if ($LASTEXITCODE -ne 0) { throw 'IMPLEMENT_FAILED: Codex CLI exited with an error.' }
 
         Assert-ChangeScope $baseline $plan.allowed_files
 
+        $stage = 'VERIFY'
         Write-Host "VERIFY: attempt $attempt"
         $checkLog = Join-Path $runDirectory "verify-$attempt.log"
+        $stageLog = $checkLog
         npm.cmd run check 2>&1 | Tee-Object -FilePath $checkLog
         $checkExit = $LASTEXITCODE
         Assert-ChangeScope $baseline $plan.allowed_files
@@ -174,7 +186,9 @@ Summarize the change, reproduction evidence, and any unresolved blocker.
             continue
         }
 
-        Write-Host "REVIEW: attempt $attempt"
+        $stage = 'REVIEW'
+        $stageLog = Join-Path $runDirectory "review-$attempt.log"
+        Write-Host "REVIEW: attempt $attempt (log: $stageLog)"
         $reviewPath = Join-Path $runDirectory "review-$attempt.json"
         $reviewPrompt = @"
 Independently review the Mini React task against its acceptance criteria.
@@ -194,9 +208,9 @@ Use blocked if evidence or task information is insufficient to review. Explain w
 Use pass with empty findings only if the code meets the task and no fix is needed.
 Set browser_check_required if acceptance depends on real browser behavior, such as focus or IME.
 "@
-        $reviewPrompt | codex --ask-for-approval never exec --sandbox read-only `
+        $reviewPrompt | codex --ask-for-approval never exec --disable apps --color never --sandbox read-only `
             --output-schema $reviewSchemaPath --output-last-message $reviewPath - 2>&1 |
-            Tee-Object -FilePath (Join-Path $runDirectory "review-$attempt.log")
+            Set-Content -LiteralPath $stageLog -Encoding utf8
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $reviewPath -PathType Leaf)) {
             throw 'REVIEW_FAILED: Codex CLI did not produce a review result.'
         }
@@ -228,6 +242,10 @@ Set browser_check_required if acceptance depends on real browser behavior, such 
         return
     }
     throw "RETRY_LIMIT: Review the logs and working tree. Last failure:`n$feedback"
+} catch {
+    [Console]::Error.WriteLine("WORKFLOW_FAILED [$stage]: $($_.Exception.Message)")
+    if ($stageLog) { [Console]::Error.WriteLine("Stage log: $stageLog") }
+    exit 1
 } finally {
     Pop-Location
 }

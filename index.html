@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -17,6 +17,11 @@
         >
         <div class="sidebar-label">WORKSPACE / 01</div>
         <nav class="view-nav" aria-label="실습 화면">
+          <button type="button" data-view="characters" aria-pressed="false">
+            <span class="nav-number">✦</span
+            ><span>Node World<small>움직이는 VDOM · DOM 친구들</small></span
+            ><span class="nav-dot"></span>
+          </button>
           <button type="button" data-view="phase1" aria-pressed="true">
             <span class="nav-number">01</span
             ><span>DOM Playground<small>Virtual DOM · Diff · Patch</small></span
@@ -53,6 +58,81 @@
           >
         </div>
 
+        <section
+          id="characters"
+          class="view"
+          hidden
+          aria-labelledby="characters-title"
+        >
+          <header class="page-heading">
+            <div>
+              <p class="eyebrow">PHASE 01 + 02 / NODE WORLD</p>
+              <h1 id="characters-title">
+                만나고, 비교하고, <span>화면으로 배달해요.</span>
+              </h1>
+              <p class="page-description">
+                실제 DOM에서 태어난 기존 VDOM과 신규 VDOM이 하나씩 만나요.
+                Diff가 차이를 찾고, Patch 친구를 누르면 실제 화면이 바뀝니다.
+              </p>
+            </div>
+            <span class="version-pill">REAL ENGINE · PLAY & LEARN</span>
+          </header>
+          <div id="node-journey"></div>
+          <details class="journey-advanced">
+            <summary>고급 관찰 · 자유 실험과 완료된 실행 기록 보기</summary>
+            <div class="world-actions" role="group" aria-label="노드 변화 실험">
+              <button data-world-action="text">
+                말 바꾸기 <small>TEXT</small></button
+              ><button data-world-action="props">
+                옷 갈아입기 <small>PROPS</small></button
+              ><button data-world-action="insert">
+                친구 추가 <small>INSERT</small></button
+              ><button data-world-action="remove">
+                친구 보내기 <small>REMOVE</small></button
+              ><button data-world-action="replace">
+                친구 교체 <small>REPLACE</small></button
+              ><button data-world-action="move">
+                자리 바꾸기 <small>MOVE</small></button
+              ><button data-world-action="batch">
+                State +3 <small>BATCH</small></button
+              ><button data-world-action="undo">↶ Undo</button
+              ><button data-world-action="redo">↷ Redo</button>
+              <button data-world-action="reset">처음 트리로 ↺</button>
+              <button data-world-action="noop">
+                그대로 두기 <small>PATCH 0</small>
+              </button>
+            </div>
+            <div id="character-world"></div>
+            <div class="world-live-grid">
+              <section class="panel">
+                <div class="panel-header">
+                  <h2>01 · 실제 DOM</h2>
+                  <span class="small-tag">HTML → VDOM → PATCH</span>
+                </div>
+                <div id="world-dom"></div>
+              </section>
+              <section class="panel">
+                <div class="panel-header">
+                  <h2>02 · 실제 State & Hooks</h2>
+                  <span class="small-tag">배칭 → DIFF → PATCH</span>
+                </div>
+                <div id="world-state"></div>
+                <p id="world-hook-status" class="panel-footer"></p>
+              </section>
+            </div>
+            <p class="world-footnote">
+              위 실제 화면은 엔진이 즉시 반영한 현재 상태입니다. 캐릭터 재생은
+              기록을 보여주며 실제 상태를 되돌리지 않아요. Phase 1·2 실습에서
+              만든 변화도 이곳에 기록됩니다.
+            </p>
+            <div class="world-actions">
+              <button data-world-open="phase1">HTML 직접 편집하러 가기 →</button
+              ><button data-world-open="phase2">
+                할 일 앱과 Hooks 실험하기 →
+              </button>
+            </div>
+          </details>
+        </section>
         <section id="phase1" class="view" aria-labelledby="phase1-title">
           <header class="page-heading">
             <div>
@@ -334,11 +414,13 @@
               </p>
             </article>
             <article class="guide-card">
-              <span class="guide-number">03 / 다섯 가지 DIFF</span>
+              <span class="guide-number">03 / 여섯 가지 DIFF</span>
               <h2>변경을 분류합니다.</h2>
               <dl class="case-list">
                 <dt>INSERT</dt>
                 <dd>새 자식 추가</dd>
+                <dt>MOVE</dt>
+                <dd>고유 key를 가진 기존 자식 이동</dd>
                 <dt>REMOVE</dt>
                 <dd>기존 자식 삭제</dd>
                 <dt>REPLACE</dt>
@@ -349,8 +431,8 @@
                 <dd>속성·프로퍼티·이벤트 변경</dd>
               </dl>
               <p>
-                자식은 인덱스로 비교합니다. 최적의 이동을 찾는 key 기반 재정렬은
-                구현 범위 밖입니다.
+                고유한 key를 가진 형제는 key로 대응시켜 MOVE로 이동합니다. key가
+                없거나 불완전하면 인덱스로 비교합니다.
               </p>
             </article>
             <article class="guide-card">
@@ -390,9 +472,9 @@
               버튼을 사용하세요. docs/TOP_DOWN.md를 따라 반례를 추가해 보세요.
             </p>
             <p>
-              이 구현은 동기식 렌더링·인덱스 비교·루트 Hook만 지원합니다. 실제
-              React의 Fiber, 동시 렌더링, 자식별 상태, key 재정렬, 에러 경계는
-              구현하지 않습니다.
+              이 구현은 동기식 렌더링·key/인덱스 비교·루트 Hook을 지원합니다.
+              실제 React의 Fiber, 동시 렌더링, 자식별 상태, 에러 경계는 구현하지
+              않습니다.
             </p>
           </section>
         </section>
