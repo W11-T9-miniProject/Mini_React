@@ -14,6 +14,24 @@ describe('playground', () => {
     test.querySelector('p').textContent = '수정';
     expect(actual.querySelector('p').textContent).not.toBe('수정');
   });
-  it.todo('편집 → Patch → 뒤로 → 앞으로 이동한다');
-  it.todo('미적용 편집 후 이력 이동 시 두 영역을 목표 상태로 맞춘다');
+  it('편집 후 Patch와 뒤로/앞으로 이동을 동기화한다', () => {
+    document.body.innerHTML =
+      '<button id="patch-button"></button><button id="undo-button"></button><button id="redo-button"></button><pre id="patch-output"></pre><div id="actual-root"></div><div id="test-root"></div>';
+    setupPlayground();
+    const test = document.querySelector('#test-root p');
+    test.textContent = '수정';
+    document.querySelector('#patch-button').click();
+    expect(document.querySelector('#actual-root p').textContent).toBe('수정');
+    document.querySelector('#test-root p').textContent = '미적용';
+    document.querySelector('#undo-button').click();
+    expect(document.querySelector('#actual-root p').textContent).toContain(
+      '테스트 영역',
+    );
+    expect(document.querySelector('#test-root p').textContent).toContain(
+      '테스트 영역',
+    );
+    document.querySelector('#redo-button').click();
+    expect(document.querySelector('#actual-root p').textContent).toBe('수정');
+    expect(document.querySelector('#test-root p').textContent).toBe('수정');
+  });
 });

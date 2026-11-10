@@ -3,19 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mini React · Phase 1</title>
+    <title>Mini React · Phase 1 + Phase 2</title>
   </head>
   <body>
     <main id="app">
-      <h1>Mini React · Phase 1</h1>
+      <h1>Mini React · Phase 1 + Phase 2</h1>
       <p>Virtual DOM → Diff → Patch → History</p>
       <p role="status">
-        프로젝트 뼈대입니다. 핵심 모듈 구현 후 버튼을 연결하세요.
+        테스트 영역을 편집하고 Patch를 눌러 변경을 적용하세요. 적용한 상태는
+        뒤로/앞으로 이동할 수 있습니다.
       </p>
       <nav aria-label="변경 및 이력 제어">
         <button id="patch-button" type="button" disabled>Patch</button>
         <button id="undo-button" type="button" disabled>뒤로가기</button>
         <button id="redo-button" type="button" disabled>앞으로가기</button>
+      </nav>
+      <p id="edit-status" role="status" aria-live="polite">편집 상태 확인 중</p>
+      <nav aria-label="적용 상태 이력">
+        <ol id="history-timeline" class="history-timeline"></ol>
       </nav>
       <div class="panels">
         <section aria-labelledby="actual-title">
@@ -24,7 +29,10 @@
         </section>
         <section aria-labelledby="test-title">
           <h2 id="test-title">테스트 영역</h2>
-          <p id="editor-help">아래 텍스트를 직접 수정할 수 있습니다.</p>
+          <p id="editor-help">
+            HTML을 직접 수정할 수 있습니다. 자식 순서를 바꾸는 실험에는 형제마다
+            고유한 data-key 속성을 넣어 보세요.
+          </p>
           <div
             id="test-root"
             class="sample-area"
@@ -37,6 +45,24 @@
       <section aria-labelledby="patch-title">
         <h2 id="patch-title">변경 목록</h2>
         <pre id="patch-output">Diff 구현 후 변경 목록이 표시됩니다.</pre>
+      </section>
+      <section class="phase2-demo" aria-labelledby="phase2-title">
+        <h2 id="phase2-title">Phase 2: Component · State · Hooks</h2>
+        <p>
+          버튼을 눌러 상태를 바꿔 보세요. 카운터와 파생값은 VNode Diff/Patch로
+          갱신되고, 자식 컴포넌트는 props를 받아 표시합니다.
+        </p>
+        <div class="phase2-layout">
+          <div id="phase2-root" class="phase2-component-area"></div>
+          <aside class="phase2-effect-area" aria-label="Effect 실행 상태">
+            <h3>useEffect 상태</h3>
+            <p id="phase2-effect-status" role="status">Effect 대기 중</p>
+            <p id="phase2-cleanup-status">Cleanup 대기 중</p>
+            <p class="muted">
+              count가 바뀌면 이전 Effect cleanup 뒤 새 Effect가 실행됩니다.
+            </p>
+          </aside>
+        </div>
       </section>
     </main>
     <script type="module" src="/src/main.js"></script>

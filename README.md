@@ -1,10 +1,10 @@
-# Mini React — Phase 1
+# Mini React — Phase 1 + Phase 2
 
 Vanilla JavaScript로 DOM → Virtual DOM → Diff → Patch와 상태 이력을 구현하는 팀 프로젝트입니다.
 
 ## 현재 구현 상태
 
-개발 환경과 모듈 계약, 샘플 화면을 준비한 단계입니다. 핵심 함수는 TODO이며 호출하면 미구현 오류를 던집니다. Patch/뒤로/앞으로 버튼은 연결 전까지 비활성화되어 있습니다. 현재 샘플은 초기 배치만 하며, VDOM 렌더링으로 교체해야 합니다. Phase 2의 Component/Hooks는 이번 범위에서 제외합니다.
+Phase 1의 DOM↔VNode 변환, Render, 속성 처리, Diff, Patch, History와 편집 Playground가 구현되었습니다. Phase 2의 함수형 컴포넌트, `useState`, `useEffect`, `useMemo`도 구현했고, 페이지 아래의 카운터 데모에서 동작을 확인할 수 있습니다. 설계와 한계는 `docs/phase2-design.md` 및 `docs/codesight-architecture.md`를 참고하세요.
 
 ## 환경 설정
 
@@ -78,12 +78,12 @@ VDOM은 텍스트 `{ type: 'text', value }` 또는 요소 `{ type: 'element', ta
 
 1. vdom 모듈은 버튼/영역 ID/History를 모릅니다. History는 DOM을 모릅니다. 연결은 Controller에서 합니다.
 2. 처음에는 일반 HTML 요소/텍스트/문자열 속성을 지원합니다. 공백 텍스트를 보존하고 주석은 제외합니다. 경로는 주석을 제외한 VDOM 자식에 대응하도록 Patch에서도 동일한 필터를 적용합니다. 태그 이름은 소문자로 통일합니다.
-3. 추가/삭제/교체/텍스트/속성 변경의 다섯 케이스부터 구현합니다. 자식은 인덱스로 비교하며 key 기반 재정렬은 확장 과제입니다.
+3. 추가/삭제/교체/텍스트/속성 변경을 지원합니다. 기본 자식은 인덱스로 비교하며, 모든 형제에게 key를 준 목록은 key 기반 재정렬을 지원합니다. Playground HTML에서는 `data-key`를 사용합니다.
 4. 경로 계산은 `children`이 아니라 텍스트를 포함하는 `childNodes`를 기반으로 합니다. 수정 전 대상 노드 참조를 확보합니다. 자식 삭제 후 다음 트리의 index 오름차순으로 삽입합니다. 교체/삭제되는 부모 아래에는 추가 Patch를 만들지 않습니다.
 5. History는 초기 상태를 포함합니다. 저장된 VDOM은 변경하지 않습니다. 경계 이동은 현재 상태를 반환합니다. 뒤로 이동 후 push하면 이후 이력을 제거합니다. 변경이 없는 Patch는 Controller에서 저장하지 않습니다.
 6. 이력 이동은 미적용 테스트 편집을 목표 이력으로 덮어씁니다. 테스트 영역은 현재 DOM을 다시 읽어 목표와 비교합니다.
 7. 영역 외곽의 제목과 contenteditable 속성은 비교하지 않습니다. 각 컨테이너의 `[data-sample-root]`를 비교 루트로 사용하고 해당 샘플 루트는 편집 중 유지합니다.
-8. `input.value`/`checked` 등 현재 프로퍼티와 HTML 속성의 차이, SVG, 이벤트 핸들러는 기본 범위 이후 지원 정책을 정합니다.
+8. 이벤트 handler prop은 Phase 2의 `h()`에서 지원합니다. `input.value`/`checked` 현재 프로퍼티와 HTML 속성의 차이, SVG는 아직 지원 정책을 정하지 않았습니다.
 
 ## 구현 순서와 분담
 
@@ -93,10 +93,10 @@ VDOM은 텍스트 `{ type: 'text', value }` 또는 요소 `{ type: 'element', ta
 4. C: Patch와 연속 삭제/중간 삽입/루트 교체/DOM 참조 유지 테스트를 구현합니다.
 5. D: History + Controller + 편집 UI + 버튼 연결을 구현합니다.
 6. 모듈을 연결한 뒤 초기화 → 편집 → Patch → 뒤로 → 앞으로를 검증합니다.
-   
+
 ## 테스트 기준
 
-현재 실행 가능한 테스트는 초기 샘플이 독립된 두 영역에 배치되는지 검사합니다. 나머지 `it.todo`는 구현할 테스트 목록이며 통과한 테스트가 아닙니다. 기능을 구현하면서 실제 검증으로 교체하세요.
+Vitest는 변환, 렌더링, Diff 불변성, Patch 구조 변경과 참조 유지, History 분기, Playground 이력 이동을 검사합니다. 남은 TODO 테스트는 통과한 것으로 간주하지 않습니다.
 
 핵심 통합 성질:
 
@@ -110,7 +110,7 @@ jsdom은 실제 브라우저의 레이아웃과 contenteditable 동작을 완전
 
 ## 선택 확장
 
-변경 목록 시각화 → 변경 노드 강조 → History 타임라인 → key 기반 재정렬 순으로 확장합니다. MutationObserver는 편집 감지나 미적용 표시용으로 사용할 수 있으며, Patch 버튼에서 DOM을 직접 읽는 기본 흐름에 필수는 아닙니다.
+변경 목록 시각화, 변경 노드 강조, History 타임라인, key 기반 재정렬, MutationObserver 편집 감지와 미적용 표시, Phase 2 상태 업데이트 batching을 구현했습니다. 규칙과 테스트 범위는 `docs/optional-extensions-plan.md`에 기록합니다.
 
 ## 공식 참고 자료
 
