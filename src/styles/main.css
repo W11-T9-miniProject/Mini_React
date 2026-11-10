@@ -793,3 +793,46 @@ footer {
 .comparison-controls [hidden] {
   display: none;
 }
+.key-controls {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.key-controls button {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.key-controls button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.key-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.key-list li {
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.key-list label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.key-list input {
+  min-width: 0;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  color: var(--ink);
+  font: inherit;
+}

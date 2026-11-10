@@ -331,6 +331,74 @@
           </p>
           <style id="comparison-highlight"></style>
         </details>
+        <details id="key-comparison" class="perf-method">
+          <summary>
+            항목 추가·재정렬 · 위치 비교와 key 비교는 어떻게 다를까요?
+          </summary>
+          <p>
+            먼저 ‘맨 앞에 상품 추가’를 누르세요. 마우스의 ‘선물용’ 메모가 어떤
+            상품에 남는지 비교하세요. 메모는 직접 바꿔도 됩니다.
+          </p>
+          <div
+            class="state-actions key-controls"
+            role="group"
+            aria-label="양쪽 목록에 같은 변경 적용"
+          >
+            <button id="key-prepend" type="button" data-key-action="prepend">
+              맨 앞에 상품 추가
+            </button>
+            <button id="key-reverse" type="button" data-key-action="reverse">
+              순서 뒤집기
+            </button>
+            <button id="key-remove" type="button" data-key-action="remove">
+              맨 앞 상품 삭제
+            </button>
+            <button id="key-reset" type="button" data-key-action="reset">
+              처음 상태로
+            </button>
+          </div>
+          <p id="key-status" class="status" role="status"></p>
+          <div class="phase2-pair">
+            <section>
+              <h3>위치로 비교 · key 없음</h3>
+              <p>
+                마우스에 연결된 메모: <strong id="key-position-memo"></strong>
+              </p>
+              <p id="key-position-commands" class="comparison-note"></p>
+              <div id="key-position-root"></div>
+            </section>
+            <section>
+              <h3>항목으로 비교 · data-key 사용</h3>
+              <p>
+                마우스에 연결된 메모: <strong id="key-stable-memo"></strong>
+              </p>
+              <p id="key-stable-commands" class="comparison-note"></p>
+              <div id="key-stable-root"></div>
+            </section>
+          </div>
+          <details>
+            <summary>무엇이 달라졌나요?</summary>
+            <ul>
+              <li>
+                왼쪽은 같은 자리의 내용을 바꾸므로, 입력칸에 남은 메모가 다른
+                상품에 연결될 수 있습니다.
+              </li>
+              <li>
+                오른쪽은 같은 data-key의 기존 DOM을 유지합니다. 새 상품만
+                만들고, 재정렬 때는 MOVE 명령으로 기존 요소를 이동합니다.
+              </li>
+              <li>
+                메모는 DOM 입력칸의 현재 값입니다. 앱이 메모를 상품 ID별 상태로
+                따로 보관·복원하는 방법도 있습니다.
+              </li>
+              <li>
+                실제 계산된 명령 수를 표시합니다. 속도·화면 그리기 횟수나 최소
+                이동 횟수를 보장하는 실험은 아닙니다. 체험 목록은 최대
+                6개입니다.
+              </li>
+            </ul>
+          </details>
+        </details>
       </section>
       <section
         id="state-panel"

@@ -2,7 +2,7 @@ import { applyProps } from './dom-properties.js';
 import { vnodeToDom } from './vnode-to-dom.js';
 
 /**
- * 수정 전 기존 대상 참조 확보. 자식 삭제 후 다음 index 순서로 삽입한다.
+ * 수정 전 기존 대상 참조 확보. 자식 삭제·수정 후 다음 index 순서로 삽입·이동한다.
  * 부모 교체/삭제의 하위 Patch는 Diff에서 생성하지 않는다.
  * 호출자는 반환값으로 루트 참조를 갱신한다.
  * @param {Node} root
@@ -11,7 +11,9 @@ import { vnodeToDom } from './vnode-to-dom.js';
  */
 export function patch(root, patches) {
   const targets = patches.map((change) => findNode(root, change.path));
+  const parents = targets.map((target) => target.parentNode);
   const insertions = [];
+  const replacements = new Map();
 
   for (let index = 0; index < patches.length; index += 1) {
     if (patches[index].type === 'REMOVE') {
@@ -33,6 +35,11 @@ export function patch(root, patches) {
       continue;
     }
 
+    if (change.type === 'MOVE') {
+      insertions.push({ change, parent: parents[index], target });
+      continue;
+    }
+
     if (change.type === 'TEXT') {
       target.textContent = change.value;
       continue;
@@ -45,6 +52,7 @@ export function patch(root, patches) {
 
     if (change.type === 'REPLACE') {
       const replacement = vnodeToDom(change.node);
+      replacements.set(target, replacement);
 
       if (target.parentNode) {
         target.parentNode.replaceChild(replacement, target);
@@ -61,12 +69,18 @@ export function patch(root, patches) {
   }
 
   insertions.sort((a, b) => a.change.index - b.change.index);
-  for (const { change, parent } of insertions) {
+  for (const { change, parent, target } of insertions) {
     const children = Array.from(parent.childNodes).filter(
       (child) => child.nodeType !== Node.COMMENT_NODE,
     );
-    const reference = children[change.index] ?? null;
-    parent.insertBefore(vnodeToDom(change.node), reference);
+    const node =
+      change.type === 'MOVE'
+        ? (replacements.get(target) ?? target)
+        : vnodeToDom(change.node);
+    if (change.type === 'MOVE' && children[change.index] === node) continue;
+    const reference =
+      children.filter((child) => child !== node)[change.index] ?? null;
+    parent.insertBefore(node, reference);
   }
 
   return root;
