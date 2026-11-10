@@ -46,15 +46,15 @@ describe('FunctionComponent와 useState', () => {
 
   it('동일한 상태 값이면 컴포넌트를 다시 실행하지 않는다', () => {
     let setValue;
-    const render = vi.fn(() => {
+    const componentBody = vi.fn(() => {
       const [value, setter] = useState(undefined);
       setValue = setter;
       return paragraph(value);
     });
-    const component = new FunctionComponent(render, container());
+    const component = new FunctionComponent(componentBody, container());
     component.mount();
     setValue(undefined);
-    expect(render).toHaveBeenCalledTimes(1);
+    expect(componentBody).toHaveBeenCalledTimes(1);
   });
 
   it('상태는 서로 다른 루트 객체 사이에서 섞이지 않는다', () => {

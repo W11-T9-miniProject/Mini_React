@@ -1,5 +1,5 @@
 import { applyProps } from './dom-properties.js';
-import { render } from './render.js';
+import { vnodeToDom } from './vnode-to-dom.js';
 
 /**
  * 수정 전 기존 대상 참조 확보. 자식 삭제 후 다음 index 순서로 삽입한다.
@@ -44,7 +44,7 @@ export function patch(root, patches) {
     }
 
     if (change.type === 'REPLACE') {
-      const replacement = render(change.node);
+      const replacement = vnodeToDom(change.node);
 
       if (target.parentNode) {
         target.parentNode.replaceChild(replacement, target);
@@ -66,7 +66,7 @@ export function patch(root, patches) {
       (child) => child.nodeType !== Node.COMMENT_NODE,
     );
     const reference = children[change.index] ?? null;
-    parent.insertBefore(render(change.node), reference);
+    parent.insertBefore(vnodeToDom(change.node), reference);
   }
 
   return root;

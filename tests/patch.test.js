@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { patch } from '../src/vdom/patch.js';
-import { render } from '../src/vdom/render.js';
+import { vnodeToDom } from '../src/vdom/vnode-to-dom.js';
 import { diff } from '../src/vdom/diff.js';
 import { domToVNode } from '../src/vdom/dom-to-vnode.js';
 
@@ -238,7 +238,7 @@ describe('patch', () => {
     (_, before, after) => {
       const previous = vnodeFromHTML(before);
       const next = vnodeFromHTML(after);
-      const root = render(previous);
+      const root = vnodeToDom(previous);
 
       const result = patch(root, diff(previous, next));
 

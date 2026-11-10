@@ -22,7 +22,7 @@ Phase 1의 DOM 변환, DOM 생성, 다섯 종류의 Diff/Patch, 편집 화면, �
 
 | 원문 필수 항목                                                  | 현재 구현 근거                                             | 검증 근거                                                      |
 | --------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
-| 실제 DOM → VDOM, VDOM → DOM                                     | `src/vdom/dom-to-vnode.js`, `render.js`                    | 변환·생성·왕복 테스트                                          |
+| 실제 DOM → VDOM, VDOM → DOM                                     | `src/vdom/dom-to-vnode.js`, `vnode-to-dom.js`              | 변환·생성·왕복 테스트                                          |
 | Diff·Patch로 변경 부분 반영                                     | `src/vdom/diff.js`, `patch.js`                             | 텍스트·속성·추가·삭제·교체, 기존 노드 유지 테스트              |
 | 실제/테스트 영역, Patch, VDOM 이력, 뒤로/앞으로 시 두 영역 이동 | `src/playground/controller.js`, `src/history/history.js`   | 화면·이력 통합 테스트, 경계·분기·변경 없음 처리                |
 | 함수형 컴포넌트를 감싸는 클래스, hooks, mount/update            | `src/component/function-component.js`                      | 초기 상태·상태 유지·독립 루트·루트 교체·잘못된 호출 테스트     |
@@ -140,8 +140,8 @@ src/
   vdom/
     types.js                 JSDoc VNode/Patch 공통 계약
     dom-to-vnode.js           실제 DOM → VDOM
-    render.js                VDOM → 새로운 DOM
-    dom-properties.js        Render/Patch 공통 속성 처리
+    vnode-to-dom.js           VDOM → 새로운 DOM
+    dom-properties.js        vnodeToDom/Patch 공통 속성 처리
     diff.js                  이전/다음 VDOM → 변경 목록
     patch.js                 변경 목록을 기존 DOM에 적용
   history/
@@ -164,7 +164,7 @@ vitest.config.js             jsdom 테스트 설정
 ## 모듈 계약과 설계 규칙
 
 - `domToVNode(node) → VNode`
-- `render(vnode) → Node`
+- `vnodeToDom(vnode) → Node` — 새 DOM 노드를 생성해 반환합니다. 페이지에 붙이는 일은 호출자가 담당합니다.
 - `diff(previous, next) → Patch[]`
 - `patch(root, patches) → Node` — 루트 교체가 있으므로 반환값을 반드시 보관합니다.
 - `createHistory(initial) → { current, push, undo, redo, canUndo, canRedo }`
@@ -199,7 +199,7 @@ VDOM은 텍스트 `{ type: 'text', value }` 또는 요소 `{ type: 'element', ta
 핵심 통합 성질:
 
 ```text
-domToVNode(patch(render(previous), diff(previous, next))) ≈ next
+domToVNode(patch(vnodeToDom(previous), diff(previous, next))) ≈ next
 ```
 
 동일한 HTML 결과 외에도 변경되지 않은 DOM 노드의 참조가 유지되는지 확인합니다. 공백, 빈 요소, 속성 삭제, 여러 자식 연속 삭제, 중간 삽입, 루트 교체, 변경 없는 Patch, 이력 경계, 뒤로 이동 후 새 저장을 다룹니다.

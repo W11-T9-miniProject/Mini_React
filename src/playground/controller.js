@@ -1,6 +1,6 @@
 import { sampleHTML } from './sample.js';
 import { domToVNode } from '../vdom/dom-to-vnode.js';
-import { render } from '../vdom/render.js';
+import { vnodeToDom } from '../vdom/vnode-to-dom.js';
 import { diff } from '../vdom/diff.js';
 import { patch } from '../vdom/patch.js';
 import { showPatches } from './patch-view.js';
@@ -13,7 +13,7 @@ export function setupPlayground() {
   actualContainer.innerHTML = sampleHTML;
   let actualRoot = actualContainer.querySelector('[data-sample-root]');
   const initialVNode = domToVNode(actualRoot);
-  testContainer.replaceChildren(render(initialVNode));
+  testContainer.replaceChildren(vnodeToDom(initialVNode));
   let currentVNode = initialVNode;
   const status = document.querySelector('[role="status"]');
   const refreshEditor = setupEditor(testContainer, status);
@@ -59,7 +59,7 @@ export function setupPlayground() {
     if (testRoot) {
       patch(testRoot, diff(domToVNode(testRoot), target));
     } else {
-      testContainer.replaceChildren(render(target));
+      testContainer.replaceChildren(vnodeToDom(target));
     }
     currentVNode = target;
     refreshEditor();

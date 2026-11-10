@@ -2,7 +2,7 @@ import {
   FunctionComponent,
   useState,
 } from '../component/function-component.js';
-import { render } from '../vdom/render.js';
+import { vnodeToDom } from '../vdom/vnode-to-dom.js';
 import {
   createCartView,
   initialCart,
@@ -46,7 +46,7 @@ export function setupPhase2Comparison() {
   function reset() {
     component?.unmount();
     manual = initialCart();
-    manualRoot.replaceChildren(render(createCartView(manual)));
+    manualRoot.replaceChildren(vnodeToDom(createCartView(manual)));
     component = new FunctionComponent(Cart, hookRoot);
     component.mount();
     document.querySelector('#phase2-manual-trace').textContent =

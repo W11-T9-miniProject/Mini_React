@@ -1,4 +1,4 @@
-import { render } from '../vdom/render.js';
+import { vnodeToDom } from '../vdom/vnode-to-dom.js';
 import { diff } from '../vdom/diff.js';
 import { patch } from '../vdom/patch.js';
 
@@ -96,7 +96,7 @@ export class FunctionComponent {
   mount() {
     if (this.root) throw new Error('mount()는 한 번만 실행할 수 있습니다.');
     const vnode = this.createVNode();
-    this.root = render(vnode);
+    this.root = vnodeToDom(vnode);
     this.container.replaceChildren(this.root);
     this.vnode = vnode;
     this.commitVersion += 1;

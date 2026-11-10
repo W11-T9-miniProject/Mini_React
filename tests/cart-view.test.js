@@ -6,7 +6,7 @@ import {
   createCartView,
   updateCartDOM,
 } from '../src/playground/cart-view.js';
-import { render } from '../src/vdom/render.js';
+import { vnodeToDom } from '../src/vdom/vnode-to-dom.js';
 describe('장바구니 금액과 직접 갱신', () => {
   it('수량·쿠폰·안내는 금액 및 별도 안내 상태로 일관되게 처리한다', () => {
     let cart = initialCart();
@@ -26,7 +26,7 @@ describe('장바구니 금액과 직접 갱신', () => {
   it('직접 DOM 수정 결과가 같은 상태를 새로 렌더한 결과와 필드·버튼까지 일치한다', () => {
     let cart = initialCart();
     const host = document.createElement('div');
-    host.append(render(createCartView(cart)));
+    host.append(vnodeToDom(createCartView(cart)));
     for (const action of [
       'add',
       'note',
@@ -37,7 +37,7 @@ describe('장바구니 금액과 직접 갱신', () => {
     ]) {
       cart = changeCart(cart, action);
       updateCartDOM(host, cart);
-      const expected = render(createCartView(cart));
+      const expected = vnodeToDom(createCartView(cart));
       for (const key of Object.keys(cartFields(cart)))
         expect(
           host.querySelector(`[data-cart-field="${key}"]`).textContent,

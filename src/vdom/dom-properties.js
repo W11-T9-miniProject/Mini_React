@@ -1,5 +1,5 @@
 /**
- * Render와 Patch의 공통 HTML 속성 처리.
+ * vnodeToDom과 Patch의 공통 HTML 속성 처리.
  * @param {Element} element
  * @param {Record<string, string>} set
  * @param {string[]} remove

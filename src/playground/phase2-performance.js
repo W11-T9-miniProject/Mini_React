@@ -3,7 +3,7 @@ import {
   useState,
   useMemo,
 } from '../component/function-component.js';
-import { render } from '../vdom/render.js';
+import { vnodeToDom } from '../vdom/vnode-to-dom.js';
 import {
   createCartView,
   updateCartDOM,
@@ -75,7 +75,7 @@ export function createCartRunner(mode, data, container) {
       result = cache;
     }
     const cart = view(quantity, note, result);
-    if (initial) container.replaceChildren(render(createCartView(cart)));
+    if (initial) container.replaceChildren(vnodeToDom(createCartView(cart)));
     else updateCartDOM(container, cart);
   }
   if (mode === 'memo') {

@@ -1,5 +1,5 @@
 import { domToVNode } from '../vdom/dom-to-vnode.js';
-import { render } from '../vdom/render.js';
+import { vnodeToDom } from '../vdom/vnode-to-dom.js';
 import { diff } from '../vdom/diff.js';
 import { patch } from '../vdom/patch.js';
 import { UNIT_PRICE, DEFAULT_NOTE, money } from './cart-view.js';
@@ -130,7 +130,7 @@ export function setupComparison() {
       list.appendChild(item);
     }
     full.replaceChildren(list);
-    partial.replaceChildren(render(domToVNode(list)));
+    partial.replaceChildren(vnodeToDom(domToVNode(list)));
     for (const container of [full, partial]) {
       container.querySelector('input').value = DEFAULT_NOTE;
     }
@@ -301,7 +301,7 @@ export function setupComparison() {
       ? ['full', 'partial']
       : ['partial', 'full']) {
       const start = performance.now();
-      if (name === 'full') full.replaceChildren(render(next));
+      if (name === 'full') full.replaceChildren(vnodeToDom(next));
       else {
         changes = diff(previous, next);
         patch(partial.firstChild, changes);
