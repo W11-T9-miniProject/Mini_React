@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="360" viewBox="0 0 1080 360" role="img" aria-labelledby="title desc">
+  <title id="title">Node World: 이전 VDOM과 다음 VDOM 비교 후 실제 DOM에 Patch</title>
+  <desc id="desc">상품 B의 텍스트가 변경되어도 실제 DOM 객체는 유지되는 개념도. 실제 화면 캡처가 아닙니다.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#789174" stroke-width="1.5"/></marker></defs>
+  <rect width="1080" height="360" rx="20" fill="#f3f7ed"/>
+  <g font-family="Arial, sans-serif" text-anchor="middle">
+    <text x="540" y="37" font-size="23" font-weight="700" fill="#304332">Node World · 바뀐 내용만 실제 DOM에 전달</text>
+    <g fill="#fff" stroke="#d4dfca" stroke-width="2"><rect x="24" y="62" width="292" height="266" rx="16"/><rect x="352" y="62" width="292" height="266" rx="16"/><rect x="738" y="62" width="318" height="266" rx="16"/></g>
+    <g font-size="19" font-weight="700" fill="#304332"><text x="170" y="94">이전 VDOM</text><text x="498" y="94">다음 VDOM</text><text x="897" y="94">실제 DOM</text></g>
+    <g stroke="#adc29c" stroke-width="3" fill="none"><path d="M170 157 L103 212 M170 157 L237 212 M498 157 L431 212 M498 157 L565 212 M897 157 L830 212 M897 157 L964 212"/></g>
+    <g fill="#dfeccd" stroke="#789174" stroke-width="2"><rect x="136" y="117" width="68" height="52" rx="19"/><rect x="464" y="117" width="68" height="52" rx="19"/><rect x="863" y="117" width="68" height="52" rx="19"/><rect x="69" y="205" width="68" height="52" rx="19"/><rect x="203" y="205" width="68" height="52" rx="19"/><rect x="397" y="205" width="68" height="52" rx="19"/><rect x="796" y="205" width="68" height="52" rx="19"/></g>
+    <g fill="#ffdfb5" stroke="#ce785c" stroke-width="2"><rect x="531" y="205" width="68" height="52" rx="19"/><rect x="930" y="205" width="68" height="52" rx="19"/></g>
+    <g font-size="17" fill="#304332"><text x="170" y="149">ul</text><text x="498" y="149">ul</text><text x="897" y="149">ul</text><text x="103" y="237">A</text><text x="237" y="237">B</text><text x="431" y="237">A</text><text x="565" y="237">B′</text><text x="830" y="237">A</text><text x="964" y="237">B′</text></g>
+    <g fill="#304332"><text x="170" y="296" font-size="16">기존 트리</text><text x="498" y="296" font-size="16">변경된 텍스트 발견</text><text x="897" y="296" font-size="16">같은 노드 · 글자만 수정</text></g>
+    <g stroke="#789174" stroke-width="2" marker-end="url(#arrow)"><path d="M321 177 H345"/><path d="M652 177 H728"/></g>
+    <text x="690" y="155" font-size="15" font-weight="700" fill="#405b38">Patch</text>
+    <text x="540" y="347" font-size="13" fill="#66765f">개념도 · TEXT 변경 예시 / 캐릭터 버전 변경과 실제 DOM 객체 교체는 구분합니다.</text>
+  </g>
+</svg>
