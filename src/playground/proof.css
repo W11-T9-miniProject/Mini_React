@@ -1,0 +1,53 @@
+﻿.proof-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.proof-card {
+  padding: 24px;
+  min-width: 0;
+}
+.proof-card h2 {
+  margin: 12px 0;
+}
+.proof-card > p {
+  line-height: 1.7;
+}
+.proof-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+.proof-stage {
+  padding: 16px;
+  background: #edf4ef;
+  border-radius: 8px;
+  min-height: 56px;
+  color: #142b32;
+}
+.proof-stage p {
+  margin: 0;
+}
+.proof-card .code-output {
+  margin-top: 16px;
+  max-height: 340px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1000px) {
+  .proof-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.proof-explanation {
+  padding: 14px 16px;
+  border-left: 3px solid #21775d;
+  background: #edf4ef;
+  margin: 16px 0;
+}
+.proof-explanation p {
+  margin-bottom: 0;
+  line-height: 1.8;
+}

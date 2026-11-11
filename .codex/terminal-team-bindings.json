@@ -1,0 +1,39 @@
+{
+  "cli": "C:/Users/wotjd/AppData/Local/Programs/orca/resources/bin/orca.exe",
+  "run": "run_b0a74fa15e2d",
+  "roles": {
+    "T1": {
+      "handle": "term_a8a38798-bc03-400e-bb6d-c6620e8586b6"
+    },
+    "T2": {
+      "handle": "term_5ed4a829-d272-4dbb-9f3b-6c0461d4a9ed",
+      "task": "task_7101e90fec9c",
+      "dispatch": "ctx_a52b6919ba1d"
+    },
+    "T3": {
+      "handle": "term_5d605b56-1766-41f5-8ace-476d374f2f3a",
+      "task": "task_57bbd35aec3d",
+      "dispatch": "ctx_0a91d218994b"
+    },
+    "T4": {
+      "handle": "term_0355d817-60ee-441f-8b91-117a7f929cbd",
+      "task": "task_9a996b0a485a",
+      "dispatch": "ctx_c79638d7e9f4"
+    },
+    "T5": {
+      "handle": "term_4b7db93e-7165-481a-a883-a283c94fae97",
+      "task": "task_3b40e5ac36e0",
+      "dispatch": "ctx_50c9a68b5d9c"
+    },
+    "T6": {
+      "handle": "term_3d94214e-d24c-4380-8e35-cc1681fb1b5f",
+      "task": "task_ee6eb0e98dfb",
+      "dispatch": "ctx_b362e1f8b572"
+    },
+    "T7": {
+      "handle": "term_c6d895d0-85b0-42e2-8c9f-60b5c97e371c",
+      "task": "task_3db244219898",
+      "dispatch": "ctx_08db03404f26"
+    }
+  }
+}
