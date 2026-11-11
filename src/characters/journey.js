@@ -207,8 +207,7 @@ export function setupJourney(host) {
     };
     committed = copy(state.next);
     remember(committed, root);
-    state.speech =
-      '같은 입력으로 직접 DOM 전체 렌더와 VDOM Diff/Patch를 실행했어요. DOM 재사용과 변경 경로를 비교해 보세요. 애니메이션 대기 시간은 속도 비교가 아니에요.';
+    state.speech = '자동 실행 완료 · 직접 DOM 전체 렌더와 VDOM Diff/Patch 적용';
     show();
   }
   function makeRuntime() {

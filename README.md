@@ -1,172 +1,187 @@
-# Mini React Lab
+# Mini React · Node World
 
-첫 화면의 **DOM → VDOM → Diff → Patch 이야기**는 실제 적용을 기다리는 실습입니다. 실제 DOM을 읽어 기존 VDOM을 만들고, 신규 VDOM만 편집합니다. 노드들이 하나씩 만나 비교하고 Diff 캐릭터가 변경 명령을 모읍니다. 비교가 끝난 뒤 Patch 캐릭터를 누르면 명령을 들고 DOM으로 걸어가며, 도착한 시점에만 실제 `patch()`를 실행합니다. 초안 작성·비교·자동 재생 중에는 실제 DOM을 변경하지 않습니다. State +3도 실제 Hooks로 신규 VDOM을 만들되, 화면 반영은 같은 Patch 단계에서 진행합니다.
+Vanilla JavaScript로 **DOM → Virtual DOM → Diff → Patch**와 **함수형 컴포넌트·Hooks**를 구현한 학습 프로젝트입니다. Node World에서 이전·다음 VDOM을 노드 캐릭터로 비교하고, Patch 배달부가 변경 명령을 실제 DOM에 적용하는 과정을 관찰합니다.
 
-아래 설명의 완료 기록 재생 화면은 **고급 관찰**을 펼치면 볼 수 있습니다. 메인 이야기는 기록 복제 화면이 아니라 Patch 전후 같은 실제 DOM 객체를 직접 사용하는 실습입니다.
+이 문서는 `origin/JSZeroDev/react`의 README 구성을 바탕으로 현재 프로젝트의 화면, 구현 계약, 검증 결과에 맞춰 작성했습니다. 참조 브랜치의 장바구니 UI나 테스트 결과를 현재 프로젝트의 결과로 사용하지 않습니다.
 
-첫 화면 **Node World**에서 Phase 1과 Phase 2의 실제 엔진 실행을 하나의 캐릭터 트리로 관찰할 수 있습니다. 부모와 자식 캐릭터는 가지로 연결되며, 새 VDOM 버전은 무대 밖에서 들어오고 이전 버전은 밖으로 퇴장합니다. 이동은 같은 캐릭터가 다른 가지 자리로 움직입니다. 말 바꾸기·옷 갈아입기·추가·삭제·교체·이동은 실제 Diff/Patch를 실행하고, State +3은 실제 Hooks 배칭을 실행합니다. Patch 목록, 단계 재생, Phase 필터, 최근 32개 기록을 제공합니다. 최신 트리 캐릭터를 선택하면 대응하는 실제 DOM 요소를 강조합니다.
+## 1. 현재 구현 상태와 발표 흐름
 
-Node World에는 같은 화면 변경을 **VDOM 없이 직접 DOM 전체를 다시 만드는 방식**과 비교하는 실험도 있습니다. 기본 학습 모드에서는 직접 DOM이 입력에 즉시 반응하고, Mini React는 Diff와 Patch 단계를 직접 살펴봅니다. `같은 입력으로 자동 실행`을 켜면 한 번의 조작에서 두 렌더 경로를 실행해 실제 DOM 재사용을 비교합니다. VDOM 캐릭터의 교체·이동 애니메이션은 그대로 재생되며, Patch 대기와 애니메이션은 성능 측정이 아닙니다. State +3은 `useEffect`의 commit 후 실행과 이전 cleanup도 기록합니다.
+현재 진입 화면은 **Node World 하나**입니다. 왼쪽 메뉴와 별도 실습 페이지는 제거했으며, 기존 실습 모듈 일부는 저장소에 남아 있습니다.
 
-캐릭터의 버전 교대와 실제 DOM 교체는 구분합니다. TEXT/PROPS는 새 VDOM 버전 캐릭터를 보여주지만 실제 DOM 객체는 재사용하고, REPLACE는 실제 DOM도 교체합니다.
+Phase 1은 DOM 변환, VDOM 렌더, Diff·Patch, key 기반 이동을 구현했습니다. Phase 2는 FunctionComponent와 useState·useEffect·useMemo, 상태 갱신 배칭을 같은 Diff·Patch 엔진에 연결했습니다. 아래 자동 검증 결과에는 통과한 검사와 남은 실패를 함께 기록했습니다.
 
-비교 보드에서 **이전 VDOM / 다음 VDOM / 실제 DOM**을 함께 봅니다. 변경된 노드와 유지된 노드를 구분하고, 같은 노드를 선택해 대응 위치를 따라갈 수 있습니다. 비교 단계에서는 관찰용 DOM이 이전 상태를 유지하고, 적용 단계에서는 프로젝트의 실제 Diff/Patch 엔진으로 그 DOM을 부분 갱신합니다. 재사용 여부는 DOM 객체 참조로 확인합니다. 원본 실습은 이미 완료된 상태이므로 이 보드는 기록을 독립된 실제 DOM으로 재생하며, 이벤트 함수는 실행하지 않습니다.
+### 발표 시연 순서
 
-캐릭터 재생은 완료된 실행의 관찰 기록이며 엔진을 일시정지하거나 앱 상태를 복원하지 않습니다. Undo/Redo 버튼은 Node World의 Phase 1 상태만 복원합니다. HTML 직접 편집과 할 일 앱 실습에서 발생한 변경도 같은 관찰 화면에 기록됩니다. 이벤트 함수는 표시 문자열로 복사하며, 관찰 기록은 History나 런타임에 다시 적용하지 않습니다.
+1. **DOM 읽기**: 현재 실제 DOM을 읽어 이전 VDOM을 만듭니다.
+2. **텍스트·속성 변경 / 친구 추가·삭제 / 교체·이동**: 다음 VDOM 초안을 만듭니다. 단계별 모드의 대상 DOM은 아직 바뀌지 않습니다.
+3. **비교 시작**: 이전·다음 노드 캐릭터를 대응시키며 실제 Diff가 만든 변경 명령을 수집합니다.
+4. **Patch 배달부**: 변경 명령을 실제 DOM에 적용하고 유지·생성·삭제된 요소를 확인합니다.
+5. **State +3**: 실제 Hook의 상태 갱신, 배칭, Memo 계산, Effect·cleanup 기록을 확인합니다.
 
-Vanilla JavaScript로 직접 구현한 Virtual DOM, Diff, Patch와 함수형 컴포넌트·Hooks 실습 프로젝트입니다. **React/Vue 등 UI 프레임워크를 사용하지 않습니다.**
+```mermaid
+flowchart LR
+  DOM[실제 DOM] -->|domToVNode| OLD[이전 VDOM]
+  EDIT[초안 변경 또는 상태 변경] --> NEW[다음 VDOM]
+  OLD --> DIFF[Diff]
+  NEW --> DIFF
+  DIFF --> COMMAND[변경 명령]
+  COMMAND -->|Patch 배달| DOM
+```
 
-브라우저에서 세 화면을 사용할 수 있습니다.
+같은 입력 자동 적용 모드에서는 Diff·Patch를 바로 실행하고 캐릭터 애니메이션으로 변화를 보여줍니다. 캐릭터의 이동 시간과 Patch 대기 시간은 학습 연출입니다.
 
-- **DOM Playground:** HTML 코드/화면 편집 → 변경 적용 → 이력 이동, Patch 목록과 VDOM 관찰
-- **Component Studio:** 할 일 추가·검색·필터·완료·삭제, 타이머, 배칭과 Memo/Effect 관찰
-- **코드 따라가기:** Top-down 학습 순서와 실제 DOM에서 실행하는 내장 엔진 검사 12개
+## 2. 요구사항과 구현 근거
 
-## 실행
+| 요구사항                    | 구현 위치                                      | 검증 근거                                          |
+| --------------------------- | ---------------------------------------------- | -------------------------------------------------- |
+| 실제 DOM → VDOM             | `src/vdom/dom-to-vnode.js`                     | 중첩 구조·공백·주석·현재 폼 값 변환 테스트         |
+| VDOM → 실제 DOM             | `src/vdom/render.js`                           | 왕복 변환, 텍스트 처리, 속성·이벤트 렌더 테스트    |
+| 이전·다음 VDOM 비교         | `src/vdom/diff.js`                             | 변경 없음, 텍스트·속성·추가·삭제·교체 테스트       |
+| 변경된 실제 DOM만 갱신      | `src/vdom/patch.js`                            | 결과 트리와 기존 DOM 객체 참조 검증                |
+| key를 이용한 목록 이동      | `diff.js`, `patch.js`                          | 이동·추가·삭제·교체 혼합 및 회귀 테스트            |
+| 함수형 컴포넌트와 상태 유지 | `src/runtime/function-component.js`            | 재실행 상태 보존, 독립 루트, Hook 호출 규칙 검사   |
+| useState·useMemo·useEffect  | `src/runtime/hooks.js`                         | setter·의존성·캐시·Effect 실행 순서·cleanup 검사   |
+| Phase 1·2 통합              | `FunctionComponent.update()`                   | 상태 변경 → 컴포넌트 실행 → 새 VDOM → Diff → Patch |
+| 사용자 조작과 시각화        | `src/characters/journey.js`, `journey-view.js` | 읽기·초안·비교·배달 단계와 실제 DOM 적용 통합 검사 |
+| Vanilla JavaScript 사용     | `package.json`, `src/`                         | React/Vue 런타임 의존성 없음                       |
 
-Node.js **24.x**와 npm을 준비합니다. 프로젝트 폴더에서:
+이력 모듈은 불변 스냅샷, 이동 경계, 뒤로 이동 후 새 저장 시 미래 이력 제거를 지원합니다. 기존 자유 HTML 편집 화면은 현재 메인 페이지에 마운트하지 않습니다.
+
+## 3. Phase 1 · DOM과 VDOM 비교·적용
+
+### 실제 엔진과 캐릭터의 관계
+
+`journey.js`가 실제 DOM 읽기와 초안 변경, `diff()`·`patch()` 실행을 조율합니다. `diff-trace.js`가 노드 대응과 방문 순서를 시각화하고, `journey-view.js`가 캐릭터를 그립니다. 단계별 모드에서는 비교 중에 대상 DOM을 바꾸지 않고, 배달 시점에 실제 Patch를 실행합니다.
+
+| 변경 명령 | 실제 동작                    | 기존 DOM 재사용         |
+| --------- | ---------------------------- | ----------------------- |
+| TEXT      | Text 노드의 내용 변경        | 재사용                  |
+| PROPS     | 속성·폼 프로퍼티·이벤트 변경 | 재사용                  |
+| INSERT    | 새 노드 삽입                 | 삽입한 노드만 새로 생성 |
+| REMOVE    | 대상 노드 제거               | 다른 노드는 유지        |
+| REPLACE   | 대상과 하위 트리 교체        | 교체 대상은 새로 생성   |
+| MOVE      | 같은 노드를 다른 위치로 이동 | 재사용                  |
+
+TEXT·PROPS에서 캐릭터 버전이 바뀌어도 실제 DOM 객체는 유지됩니다. 부모의 타입이나 태그가 달라 REPLACE가 결정되면 자식 비교는 종료합니다. 새 부모의 하위 트리가 함께 만들어지므로 자식별 수정 명령을 별도로 적용할 필요가 없기 때문입니다.
+
+### 목록의 key와 경로
+
+이전·다음 형제 목록 모두에 고유한 `props.key`가 있으면 같은 key의 노드를 대응시키고 MOVE를 만들 수 있습니다. key가 없거나 일부에만 있거나 중복되면 인덱스로 비교합니다. 이 계약은 참조 브랜치의 `data-key` 정책과 다릅니다.
+
+Patch 경로는 텍스트를 포함하고 주석을 제외한 자식 순서를 사용합니다. MOVE는 변경 전 경로와 최종 위치를 기록합니다. Patch는 구조를 바꾸기 전에 대상 참조를 확보해 연속 삭제나 이동 뒤에도 올바른 노드를 수정합니다.
+
+### VDOM 없이 전체를 다시 만드는 비교 화면
+
+상단 비교 영역의 `direct-render.js`는 일반 데이터로 새 DOM 목록을 만들고 전체 하위 트리를 교체합니다. Node World의 Patch 대상과는 별도의 DOM입니다. 같은 상태 변경에서 전체 생성과 부분 갱신의 차이를 관찰하며, 이 화면의 애니메이션으로 실행 속도를 비교하지 않습니다.
+
+## 4. Phase 2 · 상태와 Hooks
+
+런타임의 최초 mount는 `render()`로 DOM을 생성합니다. 이후 상태 변경은 기존 VDOM과 다음 VDOM을 `diff()`하고 `patch()`합니다. 갱신마다 전체 DOM을 재생성하는 방식으로 Phase 1을 우회하지 않습니다.
+
+```text
+setState → 갱신 예약 → 함수형 컴포넌트 재실행
+         → 다음 VDOM → Diff → Patch → Effect 실행
+```
+
+| 기능              | 구현 방식                                | 확인할 내용                                          |
+| ----------------- | ---------------------------------------- | ---------------------------------------------------- |
+| FunctionComponent | 인스턴스에 hooks·이전 VDOM·DOM 루트 보관 | 컴포넌트 재실행 뒤 상태 유지                         |
+| useState          | Hook 슬롯에 값과 setter 저장             | 값·함수형 setter, 같은 값 갱신 생략                  |
+| useMemo           | 계산 결과와 의존성 저장, Object.is 비교  | 같은 의존성은 재사용, 변경 시 재계산                 |
+| useEffect         | DOM commit 후 실행할 Effect 수집         | 의존성 변경 시 이전 cleanup 후 실행, unmount cleanup |
+| 배칭              | microtask에 갱신을 예약                  | 같은 동기 작업의 여러 setter를 한 번의 갱신으로 처리 |
+
+Node World의 **State +3**은 별도 컨테이너의 실제 함수형 루트를 실행해 다음 VDOM 초안을 만듭니다. 이 루트의 commit과 Effect 기록은 먼저 발생하고, 메인 대상 DOM은 별도 비교·Patch 배달 단계에서 변경됩니다. 두 DOM의 적용 시점을 구분해서 설명해야 합니다.
+
+Hook은 루트 함수형 컴포넌트의 최상위에서 같은 순서로 호출합니다. 순수 자식은 props를 받으며, 자식별 독립 Hook 상태와 React 전체 스케줄러는 구현 범위에 포함하지 않습니다.
+
+## 5. 테스트 범주와 검증 방법
+
+Vitest와 jsdom으로 입력, 변경 명령, 최종 DOM, 기존 노드 참조를 검사합니다. 소스에 테스트가 있는 것과 현재 검사에 통과한 것은 구분합니다.
+
+| 테스트 범주      | 검사 내용                                                  | 테스트 파일 (`tests/`)                                                   |
+| ---------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
+| DOM 변환·렌더    | 중첩 구조·공백·현재 폼 값·왕복 변환                        | `dom-to-vnode.test.js`, `render.test.js`                                 |
+| Diff 명령        | 텍스트·속성·추가·삭제·부모 교체·입력 불변성                | `diff.test.js`                                                           |
+| Patch·DOM 보존   | 연속 삭제·중간 삽입·루트 교체·이벤트·폼 프로퍼티·참조 유지 | `patch.test.js`                                                          |
+| key 목록 회귀    | 이동과 하위 변경, 빈 목록, 재정렬·교체 혼합                | `keyed-diff.regression.test.js`, `keyed-patch.regression.test.js`        |
+| 상태·Memo·Effect | 상태 보존·배칭·의존성·캐시·cleanup·Hook 호출 오류          | `hooks.test.js`, `runtime-lifecycle.regression.test.js`                  |
+| 이력 관리        | 경계·불변 스냅샷·새 저장 후 이력 분기                      | `history.test.js`                                                        |
+| Node World 통합  | 읽기·초안·Diff·배달·중복 적용 방지·예약 작업 정리          | `journey.test.js`, `bootstrap.test.js`                                   |
+| 비교·캐릭터 관찰 | 노드 대응·부분 갱신·애니메이션 상태·기록 분리              | `comparison.test.js`, `characters.test.js`                               |
+| 기능·학습 모듈   | 추가·검색·완료·삭제, 단계별 실행과 내장 엔진 검사          | `demo.test.js`, `learning.test.js`, `proof.test.js`, `self-test.test.js` |
+| 기존 편집 화면   | HTML 입력 정책·Patch·이력 이동                             | `playground.test.js`                                                     |
+
+핵심 성질은 다음과 같습니다. Patch 뒤 트리가 다음 VDOM과 같은지뿐 아니라 변경되지 않은 DOM 객체를 재사용했는지도 확인합니다.
+
+```text
+domToVNode(patch(render(previous), diff(previous, next))) ≈ next
+```
+
+`patch.test.js`에서는 고정된 난수로 만든 150개 트리 쌍에도 이 성질을 검사합니다. 이는 150개의 별도 테스트 항목이 아니라 한 테스트 안의 반복 검증입니다.
+
+### 실제 확인 기록 · 2026-11-11
+
+| 검사                            | 결과와 해석                                                          |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `npm test`                      | 18개 파일 중 14개 통과·4개 실패, 111개 테스트 중 96개 통과·15개 실패 |
+| Node World·Diff·Patch 집중 검사 | 직전 구현 검증에서 3개 파일·36개 테스트 통과                         |
+| 브라우저 수동 검증              | 이번 문서 작업에서 수행하지 않음                                     |
+
+현재 실패는 캐릭터 구 화면 관련 6개, 기존 편집 화면 관련 7개, Node World 마운트 선택자 1개, Hook unmount 계약 1개입니다. 구 화면을 기대하는 테스트와 현재 단일 화면 구성이 맞지 않는 문제가 있으며, Hook unmount 기대값도 구현과 일치시키는 검토가 필요합니다. 전체 검증이 통과한 상태로 표시하지 않습니다.
+
+jsdom의 포커스·선택 범위 테스트는 실제 브라우저의 레이아웃, 한글 IME, 애니메이션 가독성을 보장하지 않습니다. 발표 전 [수동 점검 문서](docs/MANUAL_TESTS.md)를 참고해 조작 흐름과 좁은 화면에서의 표시를 확인합니다.
+
+## 6. 실행 환경과 명령
+
+지정 환경은 Node.js 24.x와 npm입니다. 이번 확인 환경은 Windows / Node.js `v24.14.0` / npm `11.9.0`입니다. Vite는 개발·빌드, Vitest는 테스트, jsdom은 테스트용 DOM, Prettier는 포맷 검사에 사용합니다. API 서버·데이터베이스·별도 환경변수는 필요하지 않습니다.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-터미널에 출력된 로컬 주소를 여세요. 이미 의존성이 설치되어 있으면 `npm run dev`만 실행하면 됩니다. 별도 API 서버, DB, 환경변수, 전역 패키지 설치가 필요하지 않습니다. 모든 상태는 메모리에 있으며 새로고침하면 초기화됩니다.
+터미널에 표시된 주소로 접속합니다. 이미 의존성이 설치되어 있다면 `npm run dev`부터 실행할 수 있습니다.
 
-| 명령                   | 용도                            |
-| ---------------------- | ------------------------------- |
-| `npm run dev`          | 개발 서버                       |
-| `npm test`             | Vitest + jsdom 단위/기능 테스트 |
-| `npm run test:watch`   | 변경 시 테스트 재실행           |
-| `npm run build`        | dist에 배포용 정적 파일 생성    |
-| `npm run preview`      | 빌드 결과 로컬 확인             |
-| `npm run format`       | Prettier 포맷 적용              |
-| `npm run format:check` | 포맷 검사                       |
-| `npm run check`        | 포맷 검사 → 테스트 → 빌드       |
+| 명령                 | 용도                  |
+| -------------------- | --------------------- |
+| `npm run dev`        | 개발 서버             |
+| `npm test`           | 전체 자동 테스트      |
+| `npm run test:watch` | 변경 시 테스트 재실행 |
 
-Vite는 개발/빌드 도구, Vitest와 jsdom은 테스트 도구, Prettier는 포맷 도구입니다. UI는 브라우저 API와 자체 엔진으로 구현합니다. 의존성 변경 시 `package.json`과 `package-lock.json`을 함께 커밋하세요. `node_modules`, `dist`, `coverage`, 로컬 환경변수는 Git에서 제외합니다.
-
-이 PC처럼 npm에서 인증서 체인 오류가 나는 환경에서는, 조직에서 신뢰하는 시스템 인증서가 등록되어 있다면 PowerShell에서 `$env:NODE_USE_SYSTEM_CA = '1'`을 설정한 뒤 설치할 수 있습니다. 인증서 검증을 끄는 설정은 사용하지 않습니다.
-
-## 바로 해볼 실험
-
-### Phase 1
-
-1. HTML 편집기의 `h3` 문장을 수정합니다. 테스트 영역만 바뀝니다.
-2. **변경 적용 / Patch**를 누릅니다. 실제 영역의 텍스트가 바뀌고 TEXT Patch가 기록됩니다.
-3. `class`나 `title`을 바꿔 PROPS를 확인합니다.
-4. `h3`를 `h2`로 바꿔 REPLACE를 확인합니다.
-5. 목록의 마지막 항목을 추가/삭제해 INSERT/REMOVE를 확인합니다.
-6. 뒤로/앞으로 이동합니다. 실제 영역, 테스트 영역, HTML 편집기가 함께 복원됩니다.
-7. 뒤로 간 뒤 새 변경을 Patch하면 기존 미래 이력은 제거됩니다.
-8. 같은 상태에서 다시 Patch하면 새 이력을 저장하지 않습니다.
-
-직접 편집은 텍스트 수정과 일반 텍스트 붙여넣기를 지원합니다. 태그와 속성 변경은 HTML 편집기를 사용하세요. 브라우저는 잘못 중첩된 HTML을 자동 보정할 수 있습니다. 샘플을 감싸는 루트 div는 유지되고 그 내부는 빈 내용까지 자유롭게 편집할 수 있습니다.
-
-HTML 편집기는 일반 HTML 태그를 허용하며 script, iframe, 인라인 이벤트, style, 실행 가능한 URL 등은 거부합니다. CSS는 `class`로 적용합니다. SVG, file/password 입력, multiple select 등은 지원 범위 밖입니다. 오류가 있으면 기존 실제 DOM과 History는 보존됩니다. 이 편집 정책은 학습용이며, 불특정 외부 HTML을 저장·배포하는 서비스용 보안 경계를 대신하지 않습니다.
-
-### Phase 2
-
-1. 작업 추가: tasks와 draft 두 상태를 변경하지만 렌더 횟수는 한 번 증가합니다.
-2. 검색/필터: useMemo의 의존성에 따라 표시 목록을 계산합니다.
-3. 타이머 시작: tick만 바뀌므로 두 useMemo의 계산 횟수는 유지됩니다.
-4. **+3 배칭 테스트:** 함수형 setter 세 번 → 값은 +3, 렌더는 한 번입니다.
-5. 타이머 정지: Effect Cleanup에서 interval을 제거합니다.
-6. Unmount: Effect 정리와 제목 복원을 확인합니다. 다시 Mount하면 초기 상태입니다.
-
-렌더마다 새로 만들어지는 이벤트 함수도 PROPS Patch에 포함되므로 마지막 Patch 개수가 화면 텍스트 변경 개수보다 많을 수 있습니다.
-
-### 브라우저 내장 검사
-
-**코드 따라가기 → 12개 검사 실행**을 누르면 현재 브라우저의 DOM으로 변환·다섯 Diff·Patch·History·Hooks·할 일 앱 이벤트를 검사합니다. 별도 테스트 라이브러리 다운로드가 필요하지 않으며 실습 화면 상태는 유지합니다.
-
-이 검사는 페이지 안에서 실제 DOM API를 사용하는 기능 검사입니다. 외부 브라우저 조작 도구로 포커스·키보드·레이아웃까지 검사하는 E2E 테스트와는 범위가 다릅니다. 이번 환경에서는 별도 브라우저 자동화 의존성을 추가하지 않았습니다.
-
-## 구조
+## 7. 디렉터리와 모듈 계약
 
 ```text
 src/
-  main.js                         스타일 로드와 앱 시작
-  bootstrap.js                    두 Phase와 화면 메뉴 연결/정리
-  vdom/
-    types.js                      JSDoc VNode/Patch 계약
-    dom-to-vnode.js                현재 DOM → VDOM (폼 프로퍼티 포함)
-    render.js                     VDOM → 새 DOM
-    dom-properties.js             속성/폼 프로퍼티/이벤트 처리
-    diff.js                       이전/다음 VDOM → Patch[]
-    patch.js                      기존 DOM의 필요한 부분 수정
-  history/
-    history.js                    불변 스냅샷 + 커서
-  runtime/
-    context.js                    현재 렌더 중인 루트와 자식 호출 깊이
-    create-element.js             h()와 순수 함수형 자식 실행
-    hooks.js                      useState / useEffect / useMemo
-    function-component.js         hooks 보존, mount/update/unmount, 배칭
-    index.js                      런타임 공개 API
-  playground/
-    controller.js                 Phase 1 편집/적용/이력 흐름
-    editor.js                     HTML 검증/파싱/폼 상태 직렬화
-    sample.js                     초기 HTML
-    patch-view.js                 변경 목록 표시
-    self-test.js                  브라우저 내장 엔진 검사
-  demo/
-    app.js                        모든 Hook/State를 가진 루트 App
-    components.js                 props만 사용하는 순수 자식들
-    controller.js                 mount/unmount와 진단 정보 표시
-  styles/main.css                 반응형 실습 화면
-
-tests/                            단위·DOM 이벤트·전체 앱 통합 테스트
-docs/TOP_DOWN.md                   화면 동작부터 코드까지 따라가는 학습 안내
-docs/ARCHITECTURE.md               계약·자료 구조·설계 선택과 제한
-docs/MANUAL_TESTS.md               실제 브라우저 수동 검증 시나리오
+  main.js                         앱 진입점
+  bootstrap.js                    단일 Node World 초기화
+  characters/
+    journey.js                    실제 DOM·VDOM·Diff·Patch 흐름
+    journey-view.js                트리·캐릭터·조작 화면
+    diff-trace.js                  노드 대응과 비교 방문 순서
+    direct-render.js               전체 DOM 재생성 비교 화면
+  vdom/                           DOM 변환·렌더·Diff·Patch
+  runtime/                        함수형 컴포넌트·Hooks
+  history/                        VDOM 스냅샷 이력
+  playground/                     기존 Phase 1 실습 모듈
+  demo/                           기존 Phase 2 데모 모듈
+tests/                            단위·회귀·통합 테스트
+docs/                             설계·학습·수동 점검 문서
 ```
 
-기존 Vite 예제의 `src/counter.js`, `src/style.css`, `src/assets/`, public 예제 파일은 앱에서 참조하지 않습니다.
+| API                                  | 계약                                                         |
+| ------------------------------------ | ------------------------------------------------------------ |
+| `domToVNode(node)`                   | 실제 DOM을 VNode로 읽음                                      |
+| `render(vnode)`                      | 새 DOM 노드를 생성해 반환                                    |
+| `diff(previous, next)`               | 변경 명령 배열 반환                                          |
+| `patch(root, patches)`               | 변경 적용 후 루트 반환. 루트가 바뀔 수 있어 반환값 보관 필요 |
+| `FunctionComponent.mount(container)` | 최초 DOM 생성과 컴포넌트 루트 연결                           |
+| `FunctionComponent.update()`         | 새 VDOM 생성·Diff·Patch·Effect 실행                          |
 
-## 데이터 흐름
+VDOM은 텍스트 `{ type: 'text', value }` 또는 요소 `{ type: 'element', tag, props, children }`입니다. 핵심 엔진은 화면의 버튼이나 애니메이션을 알지 않으며, 화면이 엔진을 호출합니다. 자세한 계약은 [설계 문서](docs/ARCHITECTURE.md)와 `src/vdom/types.js`에 정리되어 있습니다.
 
-```text
-[Phase 1 최초 로드]
-샘플 HTML → 실제 DOM → domToVNode → 초기 VDOM
-                                  ├─ render → 테스트 DOM
-                                  └─ History 초기화
+## 8. 구현 범위와 AI 활용
 
-[Phase 1 Patch]
-테스트 DOM → domToVNode → diff(History 현재값, 새 VDOM)
-                         ├─ patch → 실제 DOM
-                         └─ 변경이 있으면 History.push
+React의 Fiber·동시 렌더링·SSR·Portal·전체 React API는 구현하지 않습니다. 최소 이동 횟수나 모든 트리 형태에서의 O(n) 갱신을 보장하지 않으며, 메모리 사용량과 Reflow·Repaint 횟수도 측정하지 않습니다.
 
-[Phase 2]
-이벤트 → setState → microtask 배칭 → 루트 함수 재실행
-       → 새 VDOM → 같은 diff / patch → DOM commit → Effect 정리/실행
-```
-
-History는 Phase 1용 직렬화 가능한 VDOM을 저장합니다. Phase 2의 함수형 이벤트가 있는 VDOM은 History에 넣지 않습니다. 각 Phase는 같은 Diff/Patch 엔진을 공유하지만 별도의 상태를 가집니다.
-
-## 요구사항 대응
-
-| 요구사항                              | 구현 위치 / 확인                      |
-| ------------------------------------- | ------------------------------------- |
-| DOM → Virtual DOM                     | vdom/dom-to-vnode.js                  |
-| Diff와 부분 Patch, key 기반 이동      | vdom/diff.js, patch.js                |
-| 실제/테스트 영역과 편집               | playground/controller.js, editor.js   |
-| Patch/뒤로/앞으로                     | controller.js + history/history.js    |
-| FunctionComponent 클래스와 hooks 배열 | runtime/function-component.js         |
-| mount / update / 상태 보존            | FunctionComponent + hooks.js          |
-| 루트 State와 순수 자식                | demo/app.js + components.js           |
-| useState / useEffect / useMemo        | runtime/hooks.js                      |
-| 같은 엔진 재사용                      | FunctionComponent.update의 diff/patch |
-| 선택 과제 Batching                    | FunctionComponent.schedule            |
-| 모듈/기능 테스트                      | tests/ + 브라우저 내장 검사           |
-
-## 테스트와 한계
-
-단위/통합 테스트는 공백·빈 요소·루트 교체·연속 삭제·중간 삽입·이벤트 교체·폼 프로퍼티·입력 포커스/커서·이력 분기·Hook 순서·Effect Cleanup·배칭 등을 검증합니다. 고정 seed로 만든 150개 VDOM 쌍의 왕복 성질도 검사합니다. TODO 테스트는 남기지 않았습니다.
-
-실제 브라우저 조작 검증은 `docs/MANUAL_TESTS.md`를 따라 수행하세요. jsdom 테스트는 실제 레이아웃이나 한글 IME를 재현하지 않습니다.
-
-이 엔진은 동기식 Diff/Patch와 루트 Hook을 지원합니다. 이전과 다음 목록의 모든 형제 요소에 고유한 `props.key`가 있으면 같은 key와 태그의 DOM 노드를 재사용합니다. key가 없거나 일부에만 있거나 중복되면 인덱스로 비교합니다. 예를 들어 `h('li', { key: id }, label)`처럼 요소에 key를 전달합니다.
-
-Fiber/Concurrent Rendering, 자식별 Hook/State, Fragment, Portal, Error Boundary, SSR/Hydration은 범위 밖입니다. Hook은 최상위에서 항상 같은 순서로 사용하고 상태 객체/배열은 새 값으로 갱신하세요.
-
-학습은 **[Top-down 안내](docs/TOP_DOWN.md)**부터 시작하세요.
+AI를 코드·테스트·문서 초안과 검토에 활용했습니다. 사용자가 제안한 캐릭터 이동, 두 VDOM 비교, Patch 배달, 단일 화면을 실제 엔진 호출과 연결했습니다. 발표에서는 애니메이션의 연출, 실제 엔진 실행, 자동 검증의 통과 범위와 남은 실패를 구분해 설명합니다.

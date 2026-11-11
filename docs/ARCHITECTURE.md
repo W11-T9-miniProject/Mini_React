@@ -2,9 +2,11 @@
 
 ## 노드 캐릭터 관찰
 
-메인 진입점은 `characters/journey.js`입니다. `journey-view.js`가 만든 영구 DOM 마운트에 초기 화면을 구성하고, 사용자가 읽기를 누를 때 `domToVNode`로 기존 VDOM을 만듭니다. key는 DOM 속성이 아니므로 DOM 노드 참조별 WeakMap으로 보존합니다. 초안 변경은 신규 VDOM만 수정합니다. 실제 `diff()` 결과와 `diff-trace.js`의 대응 노드 순회를 함께 사용해 비교를 표시하며, Patch 캐릭터는 전체 비교 완료 후에만 활성화합니다. 클릭 후 배달 타이머가 끝날 때 실제 `patch(root, patches)`를 실행하고 신규 VDOM을 다음 기준으로 저장합니다. Reset·종료는 자동 비교와 배달을 취소합니다.
+메인 진입점은 `characters/journey.js`입니다. `journey-view.js`가 만든 영구 DOM 마운트에 초기 화면을 구성하고, 사용자가 읽기를 누를 때 `domToVNode`로 기존 VDOM을 만듭니다. key는 DOM 속성이 아니므로 DOM 노드 참조별 WeakMap으로 보존합니다. 초안 변경은 신규 VDOM만 수정합니다. 실제 `diff()` 결과와 `diff-trace.js`의 대응 노드 순회를 함께 사용해 비교를 표시합니다. 단계별 학습 모드에서는 전체 비교 뒤 Patch 캐릭터가 활성화되고, 배달 타이머 뒤 실제 `patch(root, patches)`를 실행합니다. 자동 모드에서는 같은 입력에 `diff()`와 `patch()`를 바로 실행하고 캐릭터 변환 애니메이션을 재생합니다. Reset·종료는 예약된 비교와 배달을 취소합니다.
 
 State +3은 별도 함수형 루트에서 실제 useState·useMemo·microtask 배칭으로 신규 VDOM을 생성합니다. 이 루트의 내부 DOM은 메인 화면의 대상 DOM과 독립적이며, 메인 DOM은 동일한 Patch 배달 게이트로만 변경됩니다. 메인 이야기는 아래 완료 기록 재생 관찰기와 독립적입니다.
+
+앱 부트스트랩은 현재 Node World만 마운트합니다. `scene.js`, `world.js`, `comparison.js`, Playground와 Demo 모듈은 저장소에 남아 있지만 단일 Node World 화면에서 초기화하지 않습니다.
 
 `characters/scene.js`는 `record({source, stream, label, previous, next, patches, root, renderCount, memoRuns})`로 컨트롤러의 완료된 실행을 받습니다. source는 Phase 필터, stream은 실제 DOM 루트별 최신 기록 식별에 사용합니다. 함수 props를 설명 문자열로 바꾼 별도 스냅샷을 32개까지 보관하며, 실제 루트 참조는 stream별 최신 것만 보관합니다. VDOM/History/DOM 속성을 수정하지 않고 외부 overlay로 요소를 강조합니다. Patch 경로는 이전 트리 기준이며 고유 key 형제의 대응 관계를 시각화에 사용합니다.
 
@@ -22,7 +24,7 @@ Node World의 `direct-render.js`는 별도 비교군이다. 평범한 데이터 
 - history: 직렬화 가능한 Phase 1 VDOM의 스냅샷과 커서. DOM을 모른다.
 - runtime: 함수형 루트를 실행하고 Hook 슬롯과 갱신 주기를 관리한다.
 - playground/demo: 사용자 이벤트와 엔진을 연결한다.
-- bootstrap: 화면 선택과 전체 정리. main은 시작만 담당한다.
+- bootstrap: Node World 하나를 마운트하고 전체 정리를 위임한다. main은 시작만 담당한다.
 
 의존 방향은 화면 → runtime/history/vdom이며, 핵심 엔진이 화면을 import하지 않는다.
 

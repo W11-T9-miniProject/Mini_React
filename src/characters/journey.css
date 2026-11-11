@@ -464,13 +464,13 @@
 }
 .jv-arena {
   position: relative;
-  height: 145px;
+  height: 190px;
   isolation: isolate;
 }
 .jv-ring {
   position: absolute;
   left: 50%;
-  top: 64px;
+  top: 112px;
   transform: translateX(-50%);
   width: 220px;
   height: 55px;
@@ -480,7 +480,7 @@
 }
 .jv-walker {
   position: absolute;
-  top: 30px;
+  top: 68px;
   left: calc(50% - 100px);
   width: 70px;
   text-align: center;
@@ -544,10 +544,13 @@
   font-size: 10px;
   line-height: 1.4;
   color: #67834c;
-  max-width: 80%;
+  max-width: 94%;
   white-space: normal;
   text-align: center;
   box-shadow: 0 3px 0 #bdcfa433;
+}
+.jv-meeting-speech[hidden] {
+  display: none;
 }
 .jv-compare-controls {
   display: flex;
@@ -1049,11 +1052,437 @@
     font-size: 10px;
   }
 }
+
+/* Component comparison and measured render-size experiment. */
+.jv-journey .jv-render-columns {
+  grid-template-columns: minmax(0, 1fr);
+}
+.jv-journey .jv-direct-column {
+  width: 100%;
+  padding: 20px;
+}
+.jv-journey .jv-direct-preview {
+  min-height: 160px;
+  padding: 20px;
+}
+.jv-journey .jv-direct-root {
+  min-height: 112px;
+  padding: 18px 22px;
+}
+.jv-journey .jv-direct-root ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 0;
+  list-style: none;
+}
+.jv-journey .jv-direct-root li {
+  padding: 10px 14px;
+  border: 1px solid #d9e6c8;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 16px;
+}
+.jv-journey .jv-hook-details {
+  margin-top: 12px;
+  font-size: 15px;
+}
+.jv-journey .jv-hook-details pre {
+  max-height: 140px;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f1f5e9;
+  font-size: 13px;
+  line-height: 1.6;
+}
+/* Presentation layout: preserve readable comparison panels at every width. */
+.jv-actor .jv-creature {
+  transform: scale(1.14);
+  transform-origin: center bottom;
+}
+.jv-panel-heading > span {
+  font-size: 13px;
+}
+.jv-render-compare > header p,
+.jv-render-flow,
+.jv-render-metrics,
+.jv-engine-result {
+  line-height: 1.55;
+}
+.jv-direct-root h2,
+.jv-direct-root h3 {
+  font-size: 19px;
+}
+.jv-direct-root ul,
+.jv-direct-root p {
+  font-size: 15px;
+}
+.jv-render-metrics dt {
+  font-size: 14px;
+}
+.jv-render-metrics dd {
+  font-size: 23px;
+}
+.jv-tree-window {
+  min-height: 310px;
+}
+
+@media (max-width: 1050px) {
+  .jv-storyboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .jv-dom-home {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+  .jv-dom-home .jv-panel-heading {
+    grid-column: 1;
+  }
+  .jv-live-window {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    min-height: 0;
+    max-height: 340px;
+    border-left: 1px solid var(--line);
+  }
+  .jv-read {
+    grid-column: 1;
+    margin: 10px 14px;
+  }
+  .jv-dom-note {
+    grid-column: 1;
+    margin: 0 14px 14px;
+  }
+  .jv-evidence {
+    grid-column: 1 / -1;
+  }
+  .jv-old-panel {
+    grid-column: 1;
+  }
+  .jv-new-panel {
+    grid-column: 2;
+  }
+  .jv-meeting {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 750px) {
+  .jv-heading h2 {
+    font-size: clamp(27px, 7vw, 34px);
+  }
+  .jv-heading > button,
+  .jv-actions button,
+  .jv-compare-controls button,
+  .jv-read {
+    font-size: 15px;
+    padding: 12px 14px;
+  }
+  .jv-storyboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .jv-dom-home {
+    grid-column: 1;
+    display: block;
+  }
+  .jv-live-window {
+    min-height: 180px;
+    max-height: none;
+    border-left: 0;
+  }
+  .jv-read,
+  .jv-dom-note {
+    width: auto;
+    margin: 12px;
+  }
+  .jv-evidence,
+  .jv-old-panel,
+  .jv-new-panel,
+  .jv-meeting {
+    grid-column: 1;
+  }
+  .jv-tree-window {
+    min-height: 260px;
+  }
+  .jv-panel-heading h3 {
+    font-size: 20px;
+  }
+  .jv-actor {
+    width: 100px;
+    height: 106px;
+  }
+  .jv-node-label {
+    max-width: 100px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .jv-journey *,
   .jv-journey *:before,
   .jv-journey *:after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* Presentation sizing: keep labels readable at a distance. */
+.jv-journey {
+  padding: clamp(22px, 2.4vw, 40px);
+}
+.jv-heading > div > span {
+  font-size: 14px;
+}
+.jv-heading h2 {
+  font-size: clamp(34px, 3vw, 48px);
+  letter-spacing: -1.2px;
+}
+.jv-heading p {
+  max-width: 900px;
+  font-size: 15px;
+}
+.jv-heading > button,
+.jv-actions button,
+.jv-compare-controls button,
+.jv-read {
+  font-size: 17px;
+  padding: 14px 18px;
+}
+.jv-actions > span,
+.jv-actions label {
+  font-size: 16px;
+}
+.jv-actions select {
+  font-size: 16px;
+}
+.jv-panel-heading {
+  min-height: 96px;
+  padding: 16px 18px;
+}
+.jv-panel-heading > span {
+  font-size: 10px;
+}
+.jv-panel-heading h3 {
+  font-size: 24px;
+}
+.jv-panel-heading small {
+  font-size: 12px;
+}
+.jv-live-window {
+  font-size: 17px;
+  padding: 24px 20px;
+}
+.jv-live-window li {
+  padding: 8px;
+  margin: 7px 0;
+}
+.jv-dom-note,
+.jv-evidence,
+.jv-footer > p {
+  font-size: 16px;
+}
+.jv-tree-window {
+  min-height: 280px;
+}
+.jv-actor {
+  width: 106px;
+  height: 110px;
+}
+.jv-node-label {
+  max-width: 106px;
+  padding: 7px 8px;
+}
+.jv-node-label strong {
+  font-size: 14px;
+}
+.jv-node-label small {
+  font-size: 12px;
+}
+.jv-meeting-top {
+  font-size: 16px;
+}
+.jv-walker {
+  font-size: 15px;
+}
+.jv-meeting-speech {
+  font-size: 15px;
+}
+.jv-inspector strong,
+.jv-courier strong {
+  font-size: 16px;
+}
+.jv-inspector small,
+.jv-courier small {
+  font-size: 13px;
+}
+.jv-scroll {
+  font-size: 14px;
+}
+.jv-render-compare > header p,
+.jv-render-flow,
+.jv-render-metrics,
+.jv-engine-result {
+  font-size: 16px;
+}
+.jv-render-columns h4 {
+  font-size: 20px;
+}
+.jv-mode-toggle {
+  font-size: 15px;
+}
+.jv-footer details,
+.jv-footer pre {
+  font-size: 12px;
+}
+@media (max-width: 750px) {
+  .jv-heading h2 {
+    font-size: 25px;
+  }
+  .jv-heading p {
+    font-size: 14px;
+  }
+  .jv-actions button {
+    font-size: 12px;
+  }
+  .jv-tree-window {
+    min-height: 220px;
+  }
+  .jv-panel-heading h3 {
+    font-size: 16px;
+  }
+  .jv-panel-heading small {
+    font-size: 11px;
+  }
+}
+
+/* Final presentation overrides take precedence over legacy responsive rules. */
+.jv-journey .jv-heading h2 {
+  font-size: clamp(34px, 3vw, 48px);
+}
+.jv-journey .jv-heading > button,
+.jv-journey .jv-actions button,
+.jv-journey .jv-compare-controls button,
+.jv-journey .jv-read {
+  font-size: 17px;
+  padding: 14px 18px;
+}
+.jv-journey .jv-panel-heading h3 {
+  font-size: 24px;
+}
+.jv-journey .jv-tree-window {
+  min-height: 310px;
+}
+.jv-journey .jv-actor {
+  width: 106px;
+  height: 110px;
+}
+.jv-journey .jv-node-label {
+  max-width: 106px;
+}
+.jv-journey .jv-arena {
+  height: 190px;
+}
+.jv-journey .jv-walker {
+  top: 68px;
+}
+.jv-journey .jv-ring {
+  top: 112px;
+}
+.jv-journey .jv-node-label strong {
+  font-size: 14px;
+}
+.jv-journey .jv-node-label small {
+  font-size: 12px;
+}
+.jv-journey .jv-render-flow,
+.jv-journey .jv-render-metrics,
+.jv-journey .jv-engine-result,
+.jv-journey .jv-dom-note,
+.jv-journey .jv-evidence {
+  font-size: 16px;
+  line-height: 1.55;
+}
+.jv-journey .jv-render-columns h4 {
+  font-size: 20px;
+}
+.jv-journey .jv-direct-root h2,
+.jv-journey .jv-direct-root h3 {
+  font-size: 19px;
+}
+.jv-journey .jv-direct-root ul,
+.jv-journey .jv-direct-root p {
+  font-size: 15px;
+}
+@media (max-width: 1050px) {
+  .jv-journey .jv-storyboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .jv-journey .jv-dom-home {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+  .jv-journey .jv-live-window {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    min-height: 0;
+    max-height: 340px;
+  }
+  .jv-journey .jv-read,
+  .jv-journey .jv-dom-note {
+    grid-column: 1;
+  }
+  .jv-journey .jv-evidence,
+  .jv-journey .jv-meeting {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 750px) {
+  .jv-journey .jv-heading h2 {
+    font-size: clamp(27px, 7vw, 34px);
+  }
+  .jv-journey .jv-storyboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .jv-journey .jv-dom-home {
+    grid-column: 1;
+    display: block;
+  }
+  .jv-journey .jv-live-window {
+    grid-column: auto;
+    grid-row: auto;
+    min-height: 180px;
+    max-height: none;
+    border-left: 0;
+  }
+  .jv-journey .jv-read,
+  .jv-journey .jv-dom-note,
+  .jv-journey .jv-evidence,
+  .jv-journey .jv-old-panel,
+  .jv-journey .jv-new-panel,
+  .jv-journey .jv-meeting {
+    grid-column: 1;
+  }
+  .jv-journey .jv-panel-heading h3 {
+    font-size: 20px;
+  }
+  .jv-journey .jv-actor {
+    width: 100px;
+    height: 106px;
+  }
+  .jv-journey .jv-node-label {
+    max-width: 100px;
+  }
+  .jv-journey .jv-arena {
+    height: 225px;
+  }
+  .jv-journey .jv-walker {
+    top: 100px;
+  }
+  .jv-journey .jv-ring {
+    top: 145px;
   }
 }

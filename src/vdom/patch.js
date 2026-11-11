@@ -7,9 +7,14 @@ const children = (node) =>
 
 /** 경로는 변경 전 트리 기준. 대상 참조를 먼저 확보한 뒤 DOM을 수정한다. */
 export function patch(root, patches) {
+  const childSnapshots = new Map();
+  function originalChildren(node) {
+    if (!childSnapshots.has(node)) childSnapshots.set(node, children(node));
+    return childSnapshots.get(node);
+  }
   const targets = patches.map((change) => {
     const target = change.path.reduce(
-      (node, index) => node && children(node)[index],
+      (node, index) => node && originalChildren(node)[index],
       root,
     );
     if (!target)
@@ -30,9 +35,13 @@ export function patch(root, patches) {
         target.remove();
         break;
       case 'INSERT':
+        // A live HTMLCollection keeps append-heavy element lists O(1) per insert.
+        // Mixed text/comment children still use the VDOM child-index contract.
         target.insertBefore(
           render(change.node),
-          children(target)[change.index] ?? null,
+          target.children.length === target.childNodes.length
+            ? (target.children[change.index] ?? null)
+            : (children(target)[change.index] ?? null),
         );
         break;
       case 'MOVE': {
