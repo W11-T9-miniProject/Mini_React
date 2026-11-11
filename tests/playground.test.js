@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect } from 'vitest';
-import html from '../index.html?raw';
+import html from './fixtures/legacy-page.html?raw';
 import { setupPlayground } from '../src/playground/controller.js';
 import { parseHTML } from '../src/playground/editor.js';
 

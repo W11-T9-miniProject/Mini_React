@@ -58,7 +58,10 @@ function makeVNode(spec, updated) {
         tag: updated ? 'article' : 'li',
         props: { 'data-item': String(index + 1) },
         children: [
-          { type: 'text', value: updated ? `새 항목 ${index + 1}` : label(index, 1) },
+          {
+            type: 'text',
+            value: updated ? `새 항목 ${index + 1}` : label(index, 1),
+          },
         ],
       })),
     };
@@ -132,25 +135,72 @@ export function setupPerformanceLab(host) {
     plot.replaceChildren();
     if (!times) {
       plot.append(
-        svgNode('text', { x: 480, y: 205, 'text-anchor': 'middle', class: 'jv-bench-empty' }, '조건을 측정하면 막대그래프가 표시됩니다'),
+        svgNode(
+          'text',
+          { x: 480, y: 205, 'text-anchor': 'middle', class: 'jv-bench-empty' },
+          '조건을 측정하면 막대그래프가 표시됩니다',
+        ),
       );
-      results.replaceChildren(Object.assign(document.createElement('p'), { textContent: '아직 측정 결과가 없습니다.' }));
+      results.replaceChildren(
+        Object.assign(document.createElement('p'), {
+          textContent: '아직 측정 결과가 없습니다.',
+        }),
+      );
       return;
     }
 
-    const width = 960, height = 410, left = 92, right = 34, top = 34, bottom = 82;
-    const plotWidth = width - left - right, plotHeight = height - top - bottom;
-    const maxTime = Math.max(...Object.values(times), 0.001), yMax = maxTime * 1.25;
+    const width = 960,
+      height = 410,
+      left = 92,
+      right = 34,
+      top = 34,
+      bottom = 82;
+    const plotWidth = width - left - right,
+      plotHeight = height - top - bottom;
+    const maxTime = Math.max(...Object.values(times), 0.001),
+      yMax = maxTime * 1.25;
     const y = (value) => top + (1 - value / yMax) * plotHeight;
     const baseline = top + plotHeight;
     for (let tick = 0; tick <= 4; tick += 1) {
-      const value = yMax * tick / 4, yPos = y(value);
-      plot.append(svgNode('line', { x1: left, x2: width - right, y1: yPos, y2: yPos, class: 'jv-bench-grid' }));
-      plot.append(svgNode('text', { x: left - 12, y: yPos + 5, 'text-anchor': 'end', class: 'jv-bench-axis-label' }, `${value.toFixed(3)} ms`));
+      const value = (yMax * tick) / 4,
+        yPos = y(value);
+      plot.append(
+        svgNode('line', {
+          x1: left,
+          x2: width - right,
+          y1: yPos,
+          y2: yPos,
+          class: 'jv-bench-grid',
+        }),
+      );
+      plot.append(
+        svgNode(
+          'text',
+          {
+            x: left - 12,
+            y: yPos + 5,
+            'text-anchor': 'end',
+            class: 'jv-bench-axis-label',
+          },
+          `${value.toFixed(3)} ms`,
+        ),
+      );
     }
     plot.append(
-      svgNode('line', { x1: left, x2: left, y1: top, y2: baseline, class: 'jv-bench-axis' }),
-      svgNode('line', { x1: left, x2: width - right, y1: baseline, y2: baseline, class: 'jv-bench-axis' }),
+      svgNode('line', {
+        x1: left,
+        x2: left,
+        y1: top,
+        y2: baseline,
+        class: 'jv-bench-axis',
+      }),
+      svgNode('line', {
+        x1: left,
+        x2: width - right,
+        y1: baseline,
+        y2: baseline,
+        class: 'jv-bench-axis',
+      }),
     );
     const bars = [
       { key: 'direct', label: '전체 교체', color: 'direct' },
@@ -158,34 +208,107 @@ export function setupPerformanceLab(host) {
       { key: 'vdom', label: 'VDOM Diff + Patch', color: 'vdom' },
     ].filter((bar) => Object.hasOwn(times, bar.key));
     bars.forEach((bar, index) => {
-      const x = left + plotWidth * (index + 0.5) / bars.length;
-      const barWidth = 142, barHeight = Math.max(2, baseline - y(times[bar.key]));
-      const rect = svgNode('rect', { x: x - barWidth / 2, y: baseline - barHeight, width: barWidth, height: barHeight, rx: 8, class: `jv-bench-bar-${bar.color}` });
-      rect.append(svgNode('title', {}, `${bar.label}: ${formatMs(times[bar.key])}`));
+      const x = left + (plotWidth * (index + 0.5)) / bars.length;
+      const barWidth = 142,
+        barHeight = Math.max(2, baseline - y(times[bar.key]));
+      const rect = svgNode('rect', {
+        x: x - barWidth / 2,
+        y: baseline - barHeight,
+        width: barWidth,
+        height: barHeight,
+        rx: 8,
+        class: `jv-bench-bar-${bar.color}`,
+      });
+      rect.append(
+        svgNode('title', {}, `${bar.label}: ${formatMs(times[bar.key])}`),
+      );
       plot.append(rect);
-      plot.append(svgNode('text', { x, y: Math.max(top + 20, baseline - barHeight - 10), 'text-anchor': 'middle', class: 'jv-bench-value' }, formatMs(times[bar.key])));
-      plot.append(svgNode('text', { x, y: height - 38, 'text-anchor': 'middle', class: 'jv-bench-axis-label' }, bar.label));
+      plot.append(
+        svgNode(
+          'text',
+          {
+            x,
+            y: Math.max(top + 20, baseline - barHeight - 10),
+            'text-anchor': 'middle',
+            class: 'jv-bench-value',
+          },
+          formatMs(times[bar.key]),
+        ),
+      );
+      plot.append(
+        svgNode(
+          'text',
+          {
+            x,
+            y: height - 38,
+            'text-anchor': 'middle',
+            class: 'jv-bench-axis-label',
+          },
+          bar.label,
+        ),
+      );
     });
-    plot.append(svgNode('text', { x: 22, y: top + plotHeight / 2, transform: `rotate(-90 22 ${top + plotHeight / 2})`, 'text-anchor': 'middle', class: 'jv-bench-axis-title' }, '처리 시간 (ms)'));
+    plot.append(
+      svgNode(
+        'text',
+        {
+          x: 22,
+          y: top + plotHeight / 2,
+          transform: `rotate(-90 22 ${top + plotHeight / 2})`,
+          'text-anchor': 'middle',
+          class: 'jv-bench-axis-title',
+        },
+        '처리 시간 (ms)',
+      ),
+    );
 
     const table = document.createElement('table');
-    table.innerHTML = '<thead><tr><th>비교 항목</th><th>직접 DOM 전체 교체</th><th>직접 DOM 부분 수정</th><th>VDOM Diff·Patch</th></tr></thead>';
+    table.innerHTML =
+      '<thead><tr><th>비교 항목</th><th>직접 DOM 전체 교체</th><th>직접 DOM 부분 수정</th><th>VDOM Diff·Patch</th></tr></thead>';
     const rows = [
-      ['유지한 기존 Element', metrics.direct ? `${metrics.direct.retained}개` : '—', metrics.partial ? `${metrics.partial.retained}개` : '—', `${metrics.vdom.retained}개`],
-      ['새로 생성한 Element', metrics.direct ? `${metrics.direct.created}개` : '—', metrics.partial ? `${metrics.partial.created}개` : '—', `${metrics.vdom.created}개`],
-      ['제거한 Element', metrics.direct ? `${metrics.direct.removed}개` : '—', metrics.partial ? `${metrics.partial.removed}개` : '—', `${metrics.vdom.removed}개`],
-      ['Diff 변경 명령', times.direct ? '해당 없음' : '—', times.partial ? '해당 없음' : '—', `${patchTypes.length}개${patchTypes.length ? `: ${patchTypes.join(' + ')}` : ''}`],
-      ['측정 시간', times.direct === undefined ? '—' : formatMs(times.direct), times.partial === undefined ? '—' : formatMs(times.partial), formatMs(times.vdom)],
+      [
+        '유지한 기존 Element',
+        metrics.direct ? `${metrics.direct.retained}개` : '—',
+        metrics.partial ? `${metrics.partial.retained}개` : '—',
+        `${metrics.vdom.retained}개`,
+      ],
+      [
+        '새로 생성한 Element',
+        metrics.direct ? `${metrics.direct.created}개` : '—',
+        metrics.partial ? `${metrics.partial.created}개` : '—',
+        `${metrics.vdom.created}개`,
+      ],
+      [
+        '제거한 Element',
+        metrics.direct ? `${metrics.direct.removed}개` : '—',
+        metrics.partial ? `${metrics.partial.removed}개` : '—',
+        `${metrics.vdom.removed}개`,
+      ],
+      [
+        'Diff 변경 명령',
+        times.direct ? '해당 없음' : '—',
+        times.partial ? '해당 없음' : '—',
+        `${patchTypes.length}개${patchTypes.length ? `: ${patchTypes.join(' + ')}` : ''}`,
+      ],
+      [
+        '측정 시간',
+        times.direct === undefined ? '—' : formatMs(times.direct),
+        times.partial === undefined ? '—' : formatMs(times.partial),
+        formatMs(times.vdom),
+      ],
     ];
     const body = document.createElement('tbody');
     for (const values of rows) {
       const row = document.createElement('tr');
       for (const value of values) {
-        const cell = document.createElement('td'); cell.textContent = value; row.append(cell);
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.append(cell);
       }
       body.append(row);
     }
-    table.append(body); results.replaceChildren(table);
+    table.append(body);
+    results.replaceChildren(table);
   }
 
   function runComparison() {
@@ -203,10 +326,14 @@ export function setupPerformanceLab(host) {
     const partialBeforeSet = elementSet(partialHost.firstElementChild);
     const vdomBeforeSet = elementSet(vdomRoot);
     let knownNode = null;
-    if (current.directMode === 'partial') knownNode = partialHost.querySelector('li');
+    if (current.directMode === 'partial')
+      knownNode = partialHost.querySelector('li');
     const times = {};
     let changes = [];
-    const methods = current.directMode === 'partial' ? ['partial', 'vdom'] : ['direct', 'vdom'];
+    const methods =
+      current.directMode === 'partial'
+        ? ['partial', 'vdom']
+        : ['direct', 'vdom'];
     const sequence = runCount % 2 === 0 ? methods : [...methods].reverse();
     for (const method of sequence) {
       const started = performance.now();
@@ -232,13 +359,23 @@ export function setupPerformanceLab(host) {
     };
     const patchTypes = changes.map((change) => change.type);
     const metrics = {
-      direct: current.directMode === 'replace' ? measure(directHost.firstElementChild, directBeforeSet) : null,
-      partial: current.directMode === 'partial' ? measure(partialHost.firstElementChild, partialBeforeSet) : null,
+      direct:
+        current.directMode === 'replace'
+          ? measure(directHost.firstElementChild, directBeforeSet)
+          : null,
+      partial:
+        current.directMode === 'partial'
+          ? measure(partialHost.firstElementChild, partialBeforeSet)
+          : null,
       vdom: measure(vdomRoot, vdomBeforeSet),
     };
     draw(times, metrics, patchTypes);
     const lowest = Object.entries(times).sort((a, b) => a[1] - b[1])[0][0];
-    const winner = { direct: '직접 DOM 전체 교체', partial: '직접 DOM 부분 수정', vdom: 'VDOM Diff·Patch' }[lowest];
+    const winner = {
+      direct: '직접 DOM 전체 교체',
+      partial: '직접 DOM 부분 수정',
+      vdom: 'VDOM Diff·Patch',
+    }[lowest];
     status.textContent = `${current.title} 조건에서 ${winner}의 측정 시간이 가장 짧았습니다. 한 번의 측정 결과이므로 실제 변경량과 함께 해석하세요.`;
   }
 
@@ -246,25 +383,39 @@ export function setupPerformanceLab(host) {
     const button = event.target.closest('button');
     if (!button || !host.contains(button)) return;
     if (button.matches('[data-bench-case]')) {
-      selected = CASES.find((item) => item.id === button.dataset.benchCase) || CASES[0];
-      host.querySelectorAll('[data-bench-case]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
+      selected =
+        CASES.find((item) => item.id === button.dataset.benchCase) || CASES[0];
+      host
+        .querySelectorAll('[data-bench-case]')
+        .forEach((choice) =>
+          choice.setAttribute('aria-pressed', String(choice === button)),
+        );
       description.textContent = selected.description;
       status.textContent = `선택 조건: ${selected.title}. 실행할 때 측정합니다.`;
       return;
     }
     if (button.matches('[data-bench-clear]')) {
-      draw(); status.textContent = '그래프와 결과를 초기화했습니다.'; return;
+      draw();
+      status.textContent = '그래프와 결과를 초기화했습니다.';
+      return;
     }
     if (!button.matches('[data-bench-run]')) return;
     button.disabled = true;
     status.textContent = '선택한 조건을 세 방식으로 측정하고 있습니다…';
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    try { runComparison(); }
-    catch (error) { status.textContent = `비교 중 오류가 발생했습니다: ${error.message}`; }
-    finally { button.disabled = false; }
+    try {
+      runComparison();
+    } catch (error) {
+      status.textContent = `비교 중 오류가 발생했습니다: ${error.message}`;
+    } finally {
+      button.disabled = false;
+    }
   }
 
   host.addEventListener('click', onClick);
   draw();
-  return () => { host.removeEventListener('click', onClick); host.replaceChildren(); };
+  return () => {
+    host.removeEventListener('click', onClick);
+    host.replaceChildren();
+  };
 }

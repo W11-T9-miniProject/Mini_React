@@ -14,7 +14,7 @@ describe('단일 Node World 화면', () => {
 
     expect(document.querySelector('.sidebar')).toBeNull();
     expect(document.querySelectorAll('[data-view]')).toHaveLength(0);
-    expect(document.querySelector('#node-journey .jv-journey')).not.toBeNull();
+    expect(document.querySelector('#node-journey.jv-journey')).not.toBeNull();
     expect(
       document.querySelector('[data-journey="direct-dom"]'),
     ).not.toBeNull();

@@ -72,9 +72,7 @@ export function setupJourneyView(host, callbacks = {}) {
   const doc = host.ownerDocument;
   host.classList.add('jv-journey');
   host.innerHTML = `<header class="jv-heading"><div><span>DOM → VDOM → DIFF → PATCH</span><h2>상태를 바꾸고 실제 DOM에 적용해 보세요.</h2></div><button type="button" data-journey="reset">처음부터 ↻</button></header>
-    <div class="jv-actions"><span>상태 변경</span>${Object.entries(
-      actionLabels,
-    )
+    <div class="jv-actions"><span>상태 변경</span>${Object.entries(actionLabels)
       .map(
         ([action, label]) =>
           `<button type="button" data-journey-action="${action}">${label}</button>`,

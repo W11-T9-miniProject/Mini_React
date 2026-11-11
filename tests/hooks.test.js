@@ -102,11 +102,13 @@ describe('함수형 컴포넌트와 useState', () => {
       set = setter;
       return h('p', {}, n);
     });
+    const container = app.container;
     set(1);
     app.unmount();
     await app.settled();
     set(2);
-    expect(app.container.childNodes).toHaveLength(0);
+    expect(container.childNodes).toHaveLength(0);
+    expect(app.container).toBeNull();
     expect(app.renderCount).toBe(1);
   });
 });

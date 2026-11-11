@@ -1,6 +1,6 @@
 ﻿import { afterEach, describe, expect, it, vi } from 'vitest';
-import html from '../index.html?raw';
-import { setupApplication } from '../src/bootstrap.js';
+import html from './fixtures/legacy-page.html?raw';
+import { setupApplication } from './fixtures/legacy-application.js';
 import { setupCharacterScene } from '../src/characters/scene.js';
 import { h } from '../src/runtime/index.js';
 import { render } from '../src/vdom/render.js';
