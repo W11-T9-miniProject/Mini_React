@@ -6,7 +6,7 @@ Vanilla JavaScript로 **DOM → Virtual DOM → Diff → Patch**와 **함수형 
 
 ## 1. 현재 구현 상태와 발표 흐름
 
-현재 진입 화면은 **Node World 하나**입니다. 왼쪽 메뉴와 별도 실습 페이지는 제거했으며, 기존 실습 모듈 일부는 저장소에 남아 있습니다.
+현재 진입 화면은 **Node World 하나**입니다. 
 
 Phase 1은 DOM 변환, VDOM 렌더, Diff·Patch, key 기반 이동을 구현했습니다. Phase 2는 FunctionComponent와 useState·useEffect·useMemo, 상태 갱신 배칭을 같은 Diff·Patch 엔진에 연결했습니다. 아래 자동 검증 결과에는 통과한 검사와 남은 실패를 함께 기록했습니다.
 
