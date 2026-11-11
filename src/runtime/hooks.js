@@ -58,15 +58,15 @@ export function useMemo(factory, deps) {
   return hook.value;
 }
 export function useEffect(effect, deps) {
-  const [, hook] = slot('effect', () => ({
+  if (typeof effect !== 'function')
+    throw new TypeError('useEffect의 첫 번째 인자는 함수여야 합니다.');
+  const [component, hook] = slot('effect', () => ({
     initialized: false,
+    deps: undefined,
     cleanup: undefined,
   }));
   const next = dependencies(deps);
-  if (!hook.initialized || !equal(hook.deps, next)) {
-    hook.effect = effect;
-    hook.deps = next;
-    hook.pending = true;
-    hook.initialized = true;
-  }
+  const changed =
+    !hook.initialized || next === undefined || !equal(hook.deps, next);
+  if (changed) component.pendingEffects.push({ hook, effect, deps: next });
 }

@@ -224,6 +224,11 @@ button.primary:hover:not(:disabled) {
   width: calc(100% - 244px);
   max-width: 1900px;
 }
+/* Node World needs the full space for its three synchronized trees. */
+.workspace:has(#characters:not([hidden])) {
+  max-width: none;
+  padding-inline: clamp(18px, 2vw, 40px);
+}
 .topbar {
   height: 76px;
   border-bottom: 1px solid var(--line);

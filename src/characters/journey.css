@@ -87,7 +87,10 @@
 }
 .jv-storyboard {
   display: grid;
-  grid-template-columns: minmax(190px, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(220px, 0.72fr)
+    minmax(0, 1.14fr)
+    minmax(0, 1.14fr);
   gap: 12px;
   align-items: start;
 }
@@ -186,9 +189,8 @@
   grid-column: 3;
 }
 .jv-tree-window {
-  max-height: 355px;
   overflow: auto;
-  min-height: 200px;
+  min-height: 240px;
   background: radial-gradient(#dfe8d2 1px, transparent 1px), #f8fbf1;
   background-size:
     17px 17px,
@@ -682,6 +684,160 @@
   opacity: 0.6 !important;
   cursor: default;
 }
+.jv-render-compare {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #d7e3c9;
+  border-radius: 15px;
+  background: #fffef9;
+}
+.jv-render-compare > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.jv-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 9px 11px;
+  border: 1px solid #cbdab6;
+  border-radius: 8px;
+  background: #edf4df;
+  color: #587641;
+  font-size: 10px;
+  cursor: pointer;
+}
+.jv-mode-toggle input {
+  margin: 0;
+  accent-color: #6c9147;
+}
+.jv-render-compare > header span,
+.jv-render-kicker {
+  color: #8fa373;
+  font:
+    8px ui-monospace,
+    monospace;
+  letter-spacing: 0.12em;
+}
+.jv-render-compare h3 {
+  margin: 5px 0;
+  color: #4e6b3b;
+  font-size: 16px;
+}
+.jv-render-compare > header p,
+.jv-render-flow {
+  margin: 5px 0 0;
+  color: #829174;
+  font-size: 10px;
+  line-height: 1.7;
+}
+.jv-render-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.jv-render-columns article {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #e0e8d6;
+  border-radius: 11px;
+  background: #f9fbf5;
+}
+.jv-render-columns h4 {
+  margin: 6px 0 0;
+  color: #526d3c;
+  font-size: 13px;
+}
+.jv-direct-preview {
+  min-height: 92px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px dashed #cfddbd;
+  border-radius: 8px;
+  background: white;
+}
+.jv-direct-root {
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: #f7faef;
+  animation: jv-full-render 0.35s ease-out;
+}
+.jv-direct-root.accent {
+  background: #e8f0d9;
+  outline: 2px solid #bed297;
+}
+.jv-direct-root h2,
+.jv-direct-root h3 {
+  margin: 2px 0 7px;
+  color: #526d3c;
+  font-size: 13px;
+}
+.jv-direct-root ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 10px;
+}
+.jv-direct-root li {
+  padding: 2px 0;
+}
+.jv-direct-root p {
+  margin: 7px 0 0;
+  color: #7b8f6a;
+  font-size: 9px;
+}
+.jv-render-metrics,
+.jv-engine-result {
+  min-height: 34px;
+  margin: 10px 0 0;
+  color: #72865e;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.jv-patch-column dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 10px 0;
+}
+.jv-patch-column dl div {
+  padding: 8px;
+  border-radius: 7px;
+  background: #eef4e4;
+  text-align: center;
+}
+.jv-patch-column dt {
+  color: #84966f;
+  font-size: 8px;
+}
+.jv-patch-column dd {
+  margin: 5px 0 0;
+  color: #4f6c3b;
+  font:
+    600 15px ui-monospace,
+    monospace;
+}
+.jv-patch-column h5 {
+  margin: 13px 0 5px;
+  color: #72865e;
+  font-size: 9px;
+}
+.jv-patch-column pre {
+  max-height: 82px;
+  overflow: auto;
+  margin: 0;
+  padding: 8px;
+  border-radius: 7px;
+  background: #f0f5e8;
+  color: #71865b;
+  font:
+    9px/1.6 ui-monospace,
+    monospace;
+  white-space: pre-wrap;
+}
 .jv-journey[data-phase='ready'] .jv-courier {
   background: #deedbe;
   border-color: #9cba6b;
@@ -743,6 +899,16 @@
   }
   50% {
     box-shadow: 0 0 0 9px #c5de9922;
+  }
+}
+@keyframes jv-full-render {
+  from {
+    opacity: 0.35;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 @media (max-width: 1050px) {
@@ -841,13 +1007,22 @@
     grid-column: 1/3;
   }
   .jv-tree-window {
-    max-height: 290px;
+    min-height: 210px;
   }
   .jv-panel-heading h3 {
     font-size: 13px;
   }
   .jv-delivery {
     flex-wrap: wrap;
+  }
+  .jv-render-compare {
+    padding: 12px;
+  }
+  .jv-render-compare > header {
+    flex-direction: column;
+  }
+  .jv-render-columns {
+    grid-template-columns: 1fr;
   }
   .jv-scrolls {
     order: 3;

@@ -14,6 +14,8 @@ State +3은 별도 함수형 루트에서 실제 useState·useMemo·microtask �
 
 `characters/comparison.js`는 이전/다음 VDOM 트리와 관찰용 실제 DOM을 나란히 보여줍니다. 원본 앱의 완료된 실행을 기록에서 재생하므로 원본 DOM을 되돌리거나 이벤트 함수를 다시 실행하지 않습니다. 비교 단계까지는 이전 DOM을 유지하고 적용 단계에서 공개 엔진으로 부분 갱신합니다. 표시용 스냅샷의 이벤트 props를 제외한 안전한 VDOM끼리 Diff하므로 이벤트 전용 Patch 개수와 관찰 DOM에 적용하는 Patch 개수는 다를 수 있습니다. 재사용·추가·제거 정보는 재생 전후 DOM 참조 비교에서 얻습니다.
 
+Node World의 `direct-render.js`는 별도 비교군이다. 평범한 데이터 객체에서 `document.createElement`로 DOM을 만들고 매번 전체 하위 트리를 교체한다. 실제 Patch 대상 DOM을 건드리지 않으며, 같은 학습 조작에서 재생성되는 DOM 개수를 보여준다. 이 비교군은 Mini React 렌더러나 VDOM을 사용하지 않고, 성능 벤치마크라고 주장하지 않는다.
+
 ## 책임 경계
 
 - vdom: DOM과 VDOM 변환 및 변경 계산/적용. 페이지 ID와 History를 모른다.
@@ -114,7 +116,7 @@ schedule은 Promise microtask 하나를 예약한다. 같은 턴의 setter가 �
 
 useMemo는 의존성 길이와 각 원소를 Object.is로 비교한다. undefined이면 매번 계산하고 []이면 mount 시 한 번 계산한다. 의존성 배열 자체는 복사하지만 객체 원소를 깊은 복사하지 않는다.
 
-useEffect는 렌더 중 실행하지 않고 pending 표시를 한다. DOM commit 뒤 이전 cleanup → 새 effect를 실행한다. Unmount에서 마지막 cleanup을 한 번 실행한다. 이 구현은 commit 직후 동기 실행하며 실제 React의 passive Effect 스케줄링과 다르다.
+useEffect는 렌더 중 실행하지 않고 다음 commit 후보로 기록한다. VDOM 렌더나 Patch가 실패하면 후보를 버리고 의존성을 확정하지 않는다. DOM commit 뒤 이전 cleanup → 새 effect를 실행한다. cleanup/effect 오류는 모아 보고하되 나머지 effect와 commit 기록을 계속 처리한다. Unmount는 모든 cleanup을 시도하고 DOM과 인스턴스를 정리한 뒤 오류가 있으면 AggregateError를 던진다. 이 구현은 commit 직후 동기 실행하며 실제 React의 passive Effect 스케줄링과 다르다.
 
 Effect에서 interval을 등록할 때 cleanup에서 clearInterval한다. JSX/useCallback/useRef 등은 구현하지 않는다. Effect 안에서 비동기 처리를 한다면 취소/무시 로직을 cleanup에 직접 작성해야 한다.
 

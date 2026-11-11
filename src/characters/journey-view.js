@@ -82,9 +82,16 @@ export function setupJourneyView(host, callbacks = {}) {
       .join(
         '',
       )}<label>걸음 속도 <select data-journey="speed"><option value="1800">천천히</option><option value="1000">보통</option><option value="450">빠르게</option></select></label></div>
+    <section class="jv-render-compare" aria-labelledby="jv-render-title">
+      <header><div><span>같은 상태 변경, 다른 렌더 방식</span><h3 id="jv-render-title">VDOM이 없을 때와 있을 때</h3><p>자동 실행에서도 VDOM 캐릭터의 교체·이동 애니메이션은 유지돼요. Patch 대기와 애니메이션은 설명 연출이며 실행 속도 측정이 아닙니다.</p></div><label class="jv-mode-toggle"><input type="checkbox" data-journey="instant-mode">같은 입력으로 자동 실행</label></header>
+      <div class="jv-render-columns">
+        <article class="jv-direct-column"><span class="jv-render-kicker">WITHOUT VDOM</span><h4>직접 DOM 전체 렌더</h4><p class="jv-render-flow">상태값 → createElement → 기존 화면 통째로 교체</p><div class="jv-direct-preview" data-journey="direct-dom"></div><p class="jv-render-metrics" data-journey="direct-metrics"></p></article>
+        <article class="jv-patch-column"><span class="jv-render-kicker">MINI REACT</span><h4>VDOM Diff → Patch</h4><p class="jv-render-flow">이전·다음 VDOM 비교 → 변경 명령만 실제 DOM에 적용</p><p class="jv-engine-result" data-journey="engine-result"></p><dl><div><dt>재사용한 DOM</dt><dd data-journey="engine-reused">—</dd></div><div><dt>새로 만든 DOM</dt><dd data-journey="engine-created">—</dd></div><div><dt>제거한 DOM</dt><dd data-journey="engine-removed">—</dd></div></dl><h5>useEffect · commit 이후</h5><pre data-journey="effect-log">초기 effect 대기</pre></article>
+      </div>
+    </section>
     <div class="jv-storyboard"><section class="jv-dom-home"><div class="jv-panel-heading"><span>START & ARRIVAL</span><h3>진짜 DOM의 집</h3><small>아직 Patch가 오지 않으면 그대로예요.</small></div><div class="jv-live-window"><div data-journey="dom" class="jv-live-dom"></div></div><button type="button" class="jv-read" data-journey="read">① DOM 읽어오기 →</button><p class="jv-dom-note" data-journey="dom-note"></p><div class="jv-evidence" data-journey="evidence"></div></section>
-    <section class="jv-tree-panel jv-old-panel"><div class="jv-panel-heading"><span>01 / PREVIOUS VDOM</span><h3>이전 트리</h3><small>진짜 DOM을 읽어서 만든 친구들</small></div><div class="jv-tree-window"><div class="jv-tree" data-journey="old-tree"><svg data-journey="old-branches" aria-hidden="true"></svg><p class="jv-tree-empty" data-journey="old-empty">먼저 DOM을 읽어주세요.</p></div></div></section>
-    <section class="jv-tree-panel jv-new-panel"><div class="jv-panel-heading"><span>02 / NEXT VDOM</span><h3>다음 트리</h3><small>바꾸고 싶은 다음 모습 · DOM은 아직 그대로</small></div><div class="jv-tree-window"><div class="jv-tree" data-journey="new-tree"><svg data-journey="new-branches" aria-hidden="true"></svg><p class="jv-tree-empty" data-journey="new-empty">다음 모습을 골라주세요.</p></div></div></section>
+    <section class="jv-tree-panel jv-old-panel"><div class="jv-panel-heading"><span>01 / PREVIOUS VDOM</span><h3>이전 트리</h3><small>진짜 DOM을 읽어서 만든 친구들 · 화면 안에 자동 맞춤</small></div><div class="jv-tree-window"><div class="jv-tree" data-journey="old-tree"><svg data-journey="old-branches" aria-hidden="true"></svg><p class="jv-tree-empty" data-journey="old-empty">먼저 DOM을 읽어주세요.</p></div></div></section>
+    <section class="jv-tree-panel jv-new-panel"><div class="jv-panel-heading"><span>02 / NEXT VDOM</span><h3>다음 트리</h3><small>다음 모습 · DOM은 그대로 · 화면 안에 자동 맞춤</small></div><div class="jv-tree-window"><div class="jv-tree" data-journey="new-tree"><svg data-journey="new-branches" aria-hidden="true"></svg><p class="jv-tree-empty" data-journey="new-empty">다음 모습을 골라주세요.</p></div></div></section>
     <section class="jv-meeting"><div class="jv-meeting-top"><span>③ 하나씩 만나보는 비교 광장</span><span data-journey="progress">0 / 0 쌍</span></div><div class="jv-arena" data-journey="arena"><div class="jv-ring"></div><div class="jv-walker jv-walker-old" data-journey="walker-old">${creature}<strong></strong><small>이전 친구</small></div><div class="jv-walker jv-walker-new" data-journey="walker-new">${creature}<strong></strong><small>다음 친구</small></div><div class="jv-meeting-speech" role="status" aria-live="polite" data-journey="speech">친구들이 차례대로 만나러 와요.</div></div><div class="jv-compare-controls"><button type="button" data-journey="compare">② 비교 시작</button><button type="button" data-journey="next">한 쌍 더 →</button><button type="button" data-journey="play">▶ 걸어보자</button></div></section></div>
     <section class="jv-delivery"><div class="jv-delivery-arrow" aria-hidden="true">← ← DOM의 집으로 배달 ← ←</div><div class="jv-inspector">${creature}<div><strong>Diff 수집가</strong><small data-journey="inspector-speech">다른 부분만 두루마리에 적어요.</small></div></div><div class="jv-scrolls" data-journey="patches"></div><button type="button" class="jv-courier" data-journey="patch" disabled>${creature}<span class="jv-parcel" aria-hidden="true">≡</span><strong>Patch 배달부</strong><small data-journey="patch-label">비교가 끝나면 출발!</small></button></section>
     <div class="jv-footer"><p data-journey="status"></p><details><summary>선택한 친구의 VDOM 보기</summary><pre data-journey="detail">트리의 친구를 눌러보세요.</pre></details></div>`;
@@ -132,9 +139,10 @@ export function setupJourneyView(host, callbacks = {}) {
   }
   function currentPoint(actor, tree) {
     const rect = actor.button.getBoundingClientRect(),
-      base = tree.getBoundingClientRect();
+      base = tree.getBoundingClientRect(),
+      zoom = Number(tree.dataset.zoom) || 1;
     return rect.width
-      ? { x: rect.left - base.left, y: rect.top - base.top }
+      ? { x: (rect.left - base.left) / zoom, y: (rect.top - base.top) / zoom }
       : actor.position;
   }
   function moveActor(actor, from, to, motion) {
@@ -214,14 +222,20 @@ export function setupJourneyView(host, callbacks = {}) {
   function drawTree(side, vnode) {
     const tree = get(`${side}-tree`),
       all = flatten(vnode),
-      items = all.slice(0, 60),
+      items = all,
       map = actorMaps[side],
-      { positions, width, height } = positionsFor(
-        items,
-        tree.parentElement.clientWidth,
-      );
+      availableWidth = tree.parentElement.clientWidth || 280,
+      availableHeight = Math.max(
+        140,
+        Math.min(440, (doc.defaultView?.innerHeight || 900) * 0.44),
+      ),
+      { positions, width, height } = positionsFor(items, availableWidth),
+      zoom = Math.min(1, availableWidth / width, availableHeight / height);
     tree.style.width = `${width}px`;
     tree.style.height = `${height}px`;
+    tree.style.zoom = String(zoom);
+    tree.dataset.zoom = String(zoom);
+    tree.dataset.naturalWidth = String(width);
     get(`${side}-empty`).hidden = items.length > 0;
     const targets = new Set(items.map((item) => item.id));
     for (const [id, actor] of map)
@@ -244,8 +258,8 @@ export function setupJourneyView(host, callbacks = {}) {
         from = fresh
           ? side === 'old' && home.width
             ? {
-                x: home.left + home.width / 2 - canvas.left - 43,
-                y: home.top - canvas.top,
+                x: (home.left + home.width / 2 - canvas.left - 43) / zoom,
+                y: (home.top - canvas.top) / zoom,
               }
             : { x: side === 'old' ? -170 : width + 160, y: target.y + 35 }
           : currentPoint(actor, tree);
@@ -294,7 +308,6 @@ export function setupJourneyView(host, callbacks = {}) {
         svg.append(line);
       }
     tree.dataset.total = all.length;
-    tree.dataset.limited = String(all.length > 60);
   }
   function actorAt(side, path) {
     if (!Array.isArray(path)) return null;
@@ -372,8 +385,15 @@ export function setupJourneyView(host, callbacks = {}) {
           base = tree.getBoundingClientRect();
         const from =
           entry.kind === 'MOVE' && oldRect?.width
-            ? { x: oldRect.left - base.left, y: oldRect.top - base.top }
-            : { x: tree.clientWidth + 170, y: target.y + 35 };
+            ? {
+                x:
+                  (oldRect.left - base.left) / (Number(tree.dataset.zoom) || 1),
+                y: (oldRect.top - base.top) / (Number(tree.dataset.zoom) || 1),
+              }
+            : {
+                x: Number(tree.dataset.naturalWidth || tree.clientWidth) + 170,
+                y: target.y + 35,
+              };
         moveActor(
           after,
           from,
@@ -415,11 +435,15 @@ export function setupJourneyView(host, callbacks = {}) {
     get('play').textContent = state.playing ? 'Ⅱ 잠깐 멈춰' : '▶ 걸어보자';
     get('patch').disabled = !(state.phase === 'ready' && state.completed);
     get('speed').value = String(state.speed || 1000);
+    get('instant-mode').checked = Boolean(state.instantMode);
+    get('instant-mode').disabled = state.phase === 'applying';
     get('patch-label').textContent =
       state.phase === 'applying'
         ? '명령을 들고 가는 중!'
         : state.phase === 'patched'
-          ? '배달 완료!'
+          ? state.appliedMode === 'instant'
+            ? '자동 실행 · Patch 완료'
+            : '배달 완료!'
           : state.phase === 'ready'
             ? '눌러서 DOM에 배달!'
             : '비교가 끝나면 출발!';
@@ -432,6 +456,30 @@ export function setupJourneyView(host, callbacks = {}) {
     get('evidence').textContent = state.evidence
       ? `실제 DOM 객체 · 재사용 ${state.evidence.reused} / 새로 생성 ${state.evidence.created} / 제거 ${state.evidence.removed}`
       : '실제 DOM은 이곳 하나예요. 별도 복제 화면을 쓰지 않아요.';
+    get('direct-metrics').textContent = state.directEvidence
+      ? `전체 렌더 ${state.directEvidence.renders}회 · 새 DOM ${state.directEvidence.created}개 · 이전 DOM ${state.directEvidence.removed}개 제거 · 재사용 0개`
+      : '상태가 바뀌면 이 영역의 DOM을 전부 새로 만들어요.';
+    const engineMessage =
+      state.phase === 'patched'
+        ? state.appliedMode === 'instant'
+          ? '같은 입력에서 실제 Diff/Patch를 실행했어요. VDOM 캐릭터의 변환 애니메이션은 설명 연출이며 속도 비교가 아닙니다.'
+          : 'Patch 완료 · 위 실제 DOM에 변경분만 반영했어요.'
+        : state.phase === 'applying'
+          ? '배달 중 · 도착할 때까지 실제 DOM은 이전 모습이에요.'
+          : state.phase === 'ready'
+            ? `Diff 완료 · ${state.patches.length}개 명령 대기 · Patch를 눌러 적용하세요.`
+            : state.phase === 'comparing'
+              ? 'Diff가 VDOM 트리를 비교하고 있어요. 실제 DOM은 유지됩니다.'
+              : state.phase === 'draft'
+                ? '새 VDOM만 준비됐어요. 비교와 Patch 전까지 실제 DOM은 유지됩니다.'
+                : 'State가 바뀌면 컴포넌트가 새 VDOM을 만들어요.';
+    get('engine-result').textContent = engineMessage;
+    get('engine-reused').textContent = state.evidence?.reused ?? '—';
+    get('engine-created').textContent = state.evidence?.created ?? '—';
+    get('engine-removed').textContent = state.evidence?.removed ?? '—';
+    get('effect-log').textContent = (state.effectLog || ['초기 effect 대기'])
+      .slice(-6)
+      .join('\n');
     drawTree('old', state.previous);
     drawTree('new', state.next);
     const trace = state.trace || [],
@@ -490,7 +538,7 @@ export function setupJourneyView(host, callbacks = {}) {
         ),
       );
     get('status').textContent =
-      `${state.phase === 'applying' ? 'Patch가 변경 명령을 들고 DOM으로 가는 중이에요.' : state.phase === 'dom' ? '① 진짜 DOM을 읽어 친구들을 초대해주세요.' : state.phase === 'read' ? '② 위에서 다음 VDOM의 모습을 골라주세요.' : state.phase === 'draft' ? '③ 비교 시작 또는 걸어보자를 눌러 한 쌍씩 만나게 해주세요.' : state.phase === 'ready' ? '④ 비교 끝! 빛나는 Patch 배달부를 눌러주세요.' : state.phase === 'patched' ? '배달 완료. 새 변화를 고르거나 처음부터 다시 해보세요.' : '친구들이 서로 인사하며 같은지 다른지 알아보고 있어요.'}${Math.max(Number(get('old-tree').dataset.total), Number(get('new-tree').dataset.total)) > 60 ? ' 큰 트리는 각 60명까지만 보여줘요.' : ''}${state.renderCount != null ? ` · 렌더 ${state.renderCount}회 / Memo ${state.memoRuns ?? 0}회` : ''}`;
+      `${state.phase === 'applying' ? 'Patch가 변경 명령을 들고 DOM으로 가는 중이에요.' : state.phase === 'dom' ? '① 진짜 DOM을 읽어 친구들을 초대해주세요.' : state.phase === 'read' ? '② 위에서 다음 VDOM의 모습을 골라주세요.' : state.phase === 'draft' ? '③ 비교 시작 또는 걸어보자를 눌러 한 쌍씩 만나게 해주세요.' : state.phase === 'ready' ? '④ 비교 끝! 빛나는 Patch 배달부를 눌러주세요.' : state.phase === 'patched' ? '배달 완료. 새 변화를 고르거나 처음부터 다시 해보세요.' : '친구들이 서로 인사하며 같은지 다른지 알아보고 있어요.'}${state.renderCount != null ? ` · 렌더 ${state.renderCount}회 / Memo ${state.memoRuns ?? 0}회` : ''}`;
     if (state.phase === 'applying' && previousPhase !== 'applying') {
       courierAnimation?.cancel();
       const courier = get('patch'),
@@ -530,8 +578,17 @@ export function setupJourneyView(host, callbacks = {}) {
   listen(get('speed'), 'change', () =>
     callbacks.speed?.(Number(get('speed').value)),
   );
+  listen(get('instant-mode'), 'change', () =>
+    callbacks.instantMode?.(get('instant-mode').checked),
+  );
+  listen(doc.defaultView, 'resize', () => {
+    if (!state || disposed) return;
+    drawTree('old', state.previous);
+    drawTree('new', state.next);
+  });
   return {
     dom,
+    directHost: get('direct-dom'),
     render,
     destroy() {
       disposed = true;

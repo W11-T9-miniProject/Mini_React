@@ -1,10 +1,17 @@
-import { h, FunctionComponent, useState, useMemo } from '../runtime/index.js';
+import {
+  h,
+  FunctionComponent,
+  useState,
+  useMemo,
+  useEffect,
+} from '../runtime/index.js';
 import { render } from '../vdom/render.js';
 import { domToVNode } from '../vdom/dom-to-vnode.js';
 import { diff } from '../vdom/diff.js';
 import { patch } from '../vdom/patch.js';
 import { buildDiffTrace } from './diff-trace.js';
 import { setupJourneyView } from './journey-view.js';
+import { renderDirectly } from './direct-render.js';
 
 const initialTree = () =>
   h(
@@ -31,6 +38,14 @@ function collect(root) {
   visit(root);
   return nodes;
 }
+const initialDirectModel = () => ({
+  greeting: '안녕, 노드 친구들!',
+  headingTag: 'h3',
+  accent: false,
+  friends: ['모모', '루루'],
+  count: 0,
+  memo: 0,
+});
 
 /** The visible DOM is authoritative and is changed only by Patch delivery/reset. */
 export function setupJourney(host) {
@@ -44,7 +59,10 @@ export function setupJourney(host) {
     serial = 0,
     disposed = false,
     generation = 0,
-    suppressRuntime = false;
+    suppressRuntime = false,
+    directRenders = 0,
+    directModel = initialDirectModel(),
+    effectLog = [];
   let keys = new WeakMap();
   const state = {
     phase: 'dom',
@@ -58,6 +76,10 @@ export function setupJourney(host) {
     speed: 1000,
     speech: '왼쪽은 진짜 DOM이에요. 먼저 DOM에서 기존 VDOM을 만들어 볼까요?',
     evidence: null,
+    directEvidence: null,
+    effectLog: [],
+    instantMode: false,
+    appliedMode: null,
     count: 0,
     renderCount: 0,
     memoRuns: 0,
@@ -70,6 +92,16 @@ export function setupJourney(host) {
     play,
     patch: deliver,
     reset,
+    instantMode(value) {
+      state.instantMode = Boolean(value);
+      if (
+        state.instantMode &&
+        ['draft', 'comparing', 'ready'].includes(state.phase) &&
+        !runtime?.scheduled
+      )
+        applyInstantly();
+      else show();
+    },
     speed(value) {
       state.speed = Number(value) || 1000;
       if (state.playing) scheduleNext();
@@ -78,6 +110,16 @@ export function setupJourney(host) {
   });
   function show() {
     if (!disposed) view.render(state);
+  }
+  function renderDirectModel() {
+    const result = renderDirectly(view.directHost, directModel);
+    directRenders++;
+    state.directEvidence = {
+      created: result.created,
+      removed: result.removed,
+      reused: result.reused,
+      renders: directRenders,
+    };
   }
   function stop() {
     clearTimeout(playTimer);
@@ -133,8 +175,40 @@ export function setupJourney(host) {
       cursor: -1,
       completed: false,
       evidence: null,
+      appliedMode: null,
       speech,
     });
+    show();
+    if (state.instantMode) applyInstantly();
+  }
+  function applyInstantly() {
+    if (
+      !state.next ||
+      !['draft', 'comparing', 'ready'].includes(state.phase) ||
+      runtime?.scheduled
+    )
+      return;
+    stop();
+    if (state.phase === 'draft') {
+      state.patches = diff(state.previous, state.next);
+      state.trace = buildDiffTrace(state.previous, state.next, state.patches);
+    }
+    state.cursor = state.trace.length - 1;
+    state.completed = true;
+    state.phase = 'patched';
+    state.appliedMode = 'instant';
+    const before = collect(root);
+    root = patch(root, state.patches);
+    const after = collect(root);
+    state.evidence = {
+      reused: [...after].filter((node) => before.has(node)).length,
+      created: [...after].filter((node) => !before.has(node)).length,
+      removed: [...before].filter((node) => !after.has(node)).length,
+    };
+    committed = copy(state.next);
+    remember(committed, root);
+    state.speech =
+      '같은 입력으로 직접 DOM 전체 렌더와 VDOM Diff/Patch를 실행했어요. DOM 재사용과 변경 경로를 비교해 보세요. 애니메이션 대기 시간은 속도 비교가 아니에요.';
     show();
   }
   function makeRuntime() {
@@ -143,9 +217,15 @@ export function setupJourney(host) {
       const [count, set] = useState(0);
       setter = set;
       const doubled = useMemo(() => count * 2, [count]);
+      useEffect(() => {
+        effectLog.push(`effect(${count}) · commit 뒤 실행`);
+        return () => effectLog.push(`cleanup(${count}) · 다음 effect 전 정리`);
+      }, [count]);
       const tree = copy(state.next || committed || initialTree());
       tree.children[2].children[0].value = `State ${count} · Memo ×2 = ${doubled}`;
       state.count = count;
+      directModel.count = count;
+      directModel.memo = doubled;
       return tree;
     }
     suppressRuntime = true;
@@ -154,6 +234,8 @@ export function setupJourney(host) {
       if (disposed || token !== generation) return;
       state.renderCount = info.renderCount;
       state.memoRuns = info.memoRuns;
+      state.effectLog = [...effectLog];
+      if (!suppressRuntime) renderDirectModel();
       if (!suppressRuntime)
         prepare(
           info.next,
@@ -182,22 +264,30 @@ export function setupJourney(host) {
     );
     const title = tree.children[0],
       list = tree.children[1];
-    if (action === 'text')
-      title.children[0].value = `반가워! ${++serial}번째 인사야`;
-    else if (action === 'props')
+    if (action === 'text') {
+      directModel.greeting = `반가워! ${++serial}번째 인사야`;
+      title.children[0].value = directModel.greeting;
+    } else if (action === 'props') {
       tree.props.class =
         tree.props.class === 'world-sample accent'
           ? 'world-sample'
           : 'world-sample accent';
-    else if (action === 'replace') title.tag = title.tag === 'h3' ? 'h2' : 'h3';
-    else if (action === 'insert')
-      list.children.push(
-        h('li', { key: 'new-' + ++serial }, '새 친구 ' + serial),
-      );
-    else if (action === 'remove') list.children.pop();
-    else if (action === 'move' && list.children.length > 1)
+      directModel.accent = tree.props.class.includes('accent');
+    } else if (action === 'replace') {
+      title.tag = title.tag === 'h3' ? 'h2' : 'h3';
+      directModel.headingTag = title.tag;
+    } else if (action === 'insert') {
+      const friend = '새 친구 ' + ++serial;
+      list.children.push(h('li', { key: 'new-' + serial }, friend));
+      directModel.friends.push(friend);
+    } else if (action === 'remove') {
+      list.children.pop();
+      directModel.friends.pop();
+    } else if (action === 'move' && list.children.length > 1) {
       list.children.unshift(list.children.pop());
-    else if (action !== 'noop' && action !== 'move') return;
+      directModel.friends.unshift(directModel.friends.pop());
+    } else if (action !== 'noop' && action !== 'move') return;
+    renderDirectModel();
     prepare(
       tree,
       '신규 VDOM만 바뀌었어요. 기존 VDOM과 실제 DOM은 그대로! Diff 친구에게 두 트리를 비교해 달라고 해보세요.',
@@ -296,6 +386,7 @@ export function setupJourney(host) {
         committed = copy(state.next);
         remember(committed, root);
         state.phase = 'patched';
+        state.appliedMode = 'guided';
         state.speech = state.patches.length
           ? '배달 완료! 변경 명령만 실제 DOM에 적용했어요. TEXT·PROPS·MOVE는 기존 DOM을 재사용하고 REPLACE는 실제 노드를 교체해요.'
           : '배달 완료! 차이가 없어 Patch 0개. 실제 DOM 노드는 전부 그대로예요.';
@@ -312,6 +403,9 @@ export function setupJourney(host) {
     keys = new WeakMap();
     committed = null;
     serial = 0;
+    directRenders = 0;
+    directModel = initialDirectModel();
+    effectLog = [];
     root = render(initialTree());
     view.dom.replaceChildren(root);
     remember(initialTree(), root);
@@ -324,12 +418,16 @@ export function setupJourney(host) {
       cursor: -1,
       completed: false,
       evidence: null,
+      directEvidence: null,
+      effectLog: [],
+      appliedMode: null,
       count: 0,
       renderCount: 0,
       memoRuns: 0,
       speech:
         '여기서 시작해요. 실제 DOM을 읽어 기존 VDOM 친구들을 만들어 보세요.',
     });
+    renderDirectModel();
     makeRuntime();
     show();
   }

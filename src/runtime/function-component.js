@@ -11,6 +11,7 @@ export class FunctionComponent {
     this.hookIndex = 0;
     this.renderCount = 0;
     this.memoRuns = 0;
+    this.pendingEffects = [];
     this.disposed = false;
     this.scheduled = false;
     this.pending = Promise.resolve();
@@ -28,6 +29,7 @@ export class FunctionComponent {
       throw new Error('중첩 루트 렌더링은 지원하지 않습니다.');
     const expectedHooks = this.hooks.length;
     this.hookIndex = 0;
+    this.pendingEffects = [];
     let next;
     context.current = this;
     try {
@@ -36,27 +38,27 @@ export class FunctionComponent {
         throw new Error('컴포넌트는 하나의 VNode를 반환해야 합니다.');
       if (this.renderCount && this.hookIndex !== expectedHooks)
         throw new Error('Hook 개수/호출 순서가 변경되었습니다.');
+    } catch (error) {
+      this.pendingEffects = [];
+      throw error;
     } finally {
       context.current = null;
     }
     const previous = this.vnode ?? null;
     const changes = this.vnode ? diff(this.vnode, next) : [];
-    if (this.vnode) this.root = patch(this.root, changes);
-    else {
-      this.root = render(next);
-      this.container.replaceChildren(this.root);
+    try {
+      if (this.vnode) this.root = patch(this.root, changes);
+      else {
+        this.root = render(next);
+        this.container.replaceChildren(this.root);
+      }
+    } catch (error) {
+      this.pendingEffects = [];
+      throw error;
     }
     this.vnode = next;
     this.renderCount++;
-    // DOM commit 이후 cleanup → effect 순으로 실행한다.
-    for (const hook of this.hooks) {
-      if (hook.kind === 'effect' && hook.pending) {
-        hook.pending = false;
-        if (typeof hook.cleanup === 'function') hook.cleanup();
-        const cleanup = hook.effect();
-        hook.cleanup = typeof cleanup === 'function' ? cleanup : undefined;
-      }
-    }
+    this.commitEffects();
     this.onCommit?.({
       previous,
       next,
@@ -65,6 +67,50 @@ export class FunctionComponent {
       memoRuns: this.memoRuns,
       patches: changes,
     });
+  }
+  commitEffects() {
+    const errors = [];
+    const pending = this.pendingEffects;
+    this.pendingEffects = [];
+    for (const { hook, effect, deps } of pending) {
+      if (this.disposed) break;
+      hook.initialized = true;
+      hook.deps = deps;
+      const previousCleanup = hook.cleanup;
+      hook.cleanup = undefined;
+      if (typeof previousCleanup === 'function') {
+        try {
+          previousCleanup();
+        } catch (error) {
+          errors.push(error);
+        }
+      }
+      if (this.disposed) break;
+      try {
+        const cleanup = effect();
+        if (typeof cleanup === 'function') {
+          if (!this.disposed && this.hooks.includes(hook))
+            hook.cleanup = cleanup;
+          else {
+            try {
+              cleanup();
+            } catch (error) {
+              errors.push(error);
+            }
+          }
+        }
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length) {
+      const error = new AggregateError(
+        errors,
+        'useEffect 실행 중 오류가 발생했습니다.',
+      );
+      if (this.onError) this.onError(error);
+      else console.error(error);
+    }
   }
   schedule() {
     if (this.scheduled || this.disposed) return;
@@ -86,9 +132,29 @@ export class FunctionComponent {
   unmount() {
     if (this.disposed) return;
     this.disposed = true;
-    for (const hook of this.hooks)
-      if (hook.kind === 'effect' && typeof hook.cleanup === 'function')
-        hook.cleanup();
+    const errors = [];
+    for (const hook of this.hooks) {
+      if (hook.kind !== 'effect' || typeof hook.cleanup !== 'function')
+        continue;
+      const cleanup = hook.cleanup;
+      hook.cleanup = undefined;
+      try {
+        cleanup();
+      } catch (error) {
+        errors.push(error);
+      }
+    }
     this.container?.replaceChildren();
+    this.container = null;
+    this.vnode = null;
+    this.root = null;
+    this.hooks = [];
+    this.hookIndex = 0;
+    this.pendingEffects = [];
+    if (errors.length)
+      throw new AggregateError(
+        errors,
+        'useEffect cleanup 중 오류가 발생했습니다.',
+      );
   }
 }
